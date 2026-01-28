@@ -140,7 +140,7 @@ class _HabitFormPageState extends ConsumerState<HabitFormPage> {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   if (_formKey.currentState?.validate() ?? false) {
                     final now = DateTime.now();
                     final existing = widget.habit;
@@ -160,9 +160,9 @@ class _HabitFormPageState extends ConsumerState<HabitFormPage> {
 
                     final notifier = ref.read(habitsProvider.notifier);
                     final future = existing == null ? notifier.createHabit(habit) : notifier.editHabit(habit);
-                    future.then((_) {
-                      if (mounted) Navigator.of(context).pop(true);
-                    });
+                    await future;
+                    if (!context.mounted) return;
+                    Navigator.of(context).pop(true);
                   }
                 },
                 child: Text(widget.habit == null ? 'Guardar' : 'Actualizar'),
