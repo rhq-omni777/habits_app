@@ -103,6 +103,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 icon: const Icon(Icons.login),
                                 label: const Text('Continuar con Google'),
                               ),
+                              const SizedBox(height: 8),
+                              OutlinedButton.icon(
+                                onPressed: authState.isLoading ? null : () => ref.read(authControllerProvider.notifier).doGuestSignIn(),
+                                icon: const Icon(Icons.person_outline),
+                                label: const Text('Entrar como invitado'),
+                              ),
                               TextButton(
                                 onPressed: () => context.go('/register'),
                                 child: const Text('Crear cuenta'),

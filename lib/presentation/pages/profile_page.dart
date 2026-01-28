@@ -214,7 +214,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => ref.read(authControllerProvider.notifier).doSignOut(),
+                      onPressed: () async {
+                        await ref.read(authControllerProvider.notifier).doSignOut();
+                        if (!context.mounted) return;
+                        context.go('/login');
+                      },
                       icon: const Icon(Icons.logout),
                       label: const Text('Cerrar sesión'),
                     ),
