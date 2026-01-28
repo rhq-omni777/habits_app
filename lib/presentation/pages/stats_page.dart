@@ -12,7 +12,10 @@ class StatsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final progress = (ref.watch(progressProvider).value ?? []).map(_normalize).toList();
     final habits = ref.watch(habitsProvider).value ?? [];
-    final counts = _lastSevenDaysCounts(progress);
+    final habitNames = {for (final h in habits) h.id: h.title};
+    final now = DateTime.now().toUtc();
+    final days = List.generate(7, (i) => DateTime.utc(now.year, now.month, now.day).subtract(Duration(days: 6 - i)));
+    final counts = _lastSevenDaysCounts(progress, days);
     final todayCompleted = counts.last;
     final weeklyCompleted = counts.reduce((a, b) => a + b);
     final completionToday = habits.isEmpty ? 0.0 : todayCompleted / habits.length;
@@ -31,6 +34,15 @@ class StatsPage extends ConsumerWidget {
               height: 200,
               child: BarChart(
                 BarChartData(
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    touchCallback: (event, response) {
+                      if (!event.isInterestedForInteractions || response?.spot == null) return;
+                      final index = response!.spot!.touchedBarGroupIndex;
+                      final day = days[index];
+                      _showDayDetails(context, day, progress, habitNames);
+                    },
+                  ),
                   gridData: const FlGridData(show: false),
                   titlesData: FlTitlesData(
                     leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -49,7 +61,10 @@ class StatsPage extends ConsumerWidget {
                   ),
                   borderData: FlBorderData(show: false),
                   barGroups: List.generate(7, (i) {
-                    return BarChartGroupData(x: i, barRods: [BarChartRodData(toY: counts[i].toDouble(), width: 14)]);
+                    return BarChartGroupData(
+                      x: i,
+                      barRods: [BarChartRodData(toY: counts[i].toDouble(), width: 14)],
+                    );
                   }),
                 ),
               ),
@@ -82,12 +97,10 @@ class StatsPage extends ConsumerWidget {
     );
   }
 
-  List<int> _lastSevenDaysCounts(List<HabitProgressEntity> progress) {
-    final now = DateTime.now().toUtc();
-    final counts = List<int>.filled(7, 0);
-    for (int i = 0; i < 7; i++) {
-      final day = DateTime.utc(now.year, now.month, now.day).subtract(Duration(days: 6 - i));
-      counts[i] = progress.where((p) => p.date == day && p.completed).length;
+  List<int> _lastSevenDaysCounts(List<HabitProgressEntity> progress, List<DateTime> days) {
+    final counts = List<int>.filled(days.length, 0);
+    for (int i = 0; i < days.length; i++) {
+      counts[i] = progress.where((p) => p.date == days[i] && p.completed).length;
     }
     return counts;
   }
@@ -97,6 +110,41 @@ class StatsPage extends ConsumerWidget {
         date: DateTime.utc(p.date.year, p.date.month, p.date.day),
         completed: p.completed,
       );
+
+  Future<void> _showDayDetails(
+    BuildContext context,
+    DateTime day,
+    List<HabitProgressEntity> progress,
+    Map<String, String> habitNames,
+  ) async {
+    final completed = progress
+        .where((p) => p.date == day && p.completed)
+        .map((p) => habitNames[p.habitId] ?? 'Hábito')
+        .toList();
+
+    await showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) {
+        final label = '${day.day.toString().padLeft(2, '0')}/${day.month.toString().padLeft(2, '0')}';
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Completados el $label', style: Theme.of(ctx).textTheme.titleMedium),
+              const SizedBox(height: 8),
+              if (completed.isEmpty)
+                Text('No marcaste hábitos ese día.', style: Theme.of(ctx).textTheme.bodyMedium)
+              else
+                ...completed.map((name) => ListTile(leading: const Icon(Icons.check), title: Text(name))),
+            ],
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _StatTile extends StatelessWidget {
