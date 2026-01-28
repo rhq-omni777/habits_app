@@ -1,0 +1,51 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+
+class NotificationsService {
+  NotificationsService._();
+  static final NotificationsService instance = NotificationsService._();
+  final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+
+  Future<void> init() async {
+    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const initSettings = InitializationSettings(android: androidSettings);
+    await _plugin.initialize(initSettings);
+    tz.initializeTimeZones();
+  }
+
+  Future<void> scheduleDaily({
+    required int id,
+    required String title,
+    required String body,
+    required int hour,
+    required int minute,
+  }) async {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduled = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    if (scheduled.isBefore(now)) {
+      scheduled = scheduled.add(const Duration(days: 1));
+    }
+    await _plugin.zonedSchedule(
+      id,
+      title,
+      body,
+      scheduled,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'habits_channel',
+          'Recordatorios de hábitos',
+          importance: Importance.high,
+          icon: 'ic_stat_habit',
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.wallClockTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  Future<void> cancel(int id) async {
+    await _plugin.cancel(id);
+  }
+}
