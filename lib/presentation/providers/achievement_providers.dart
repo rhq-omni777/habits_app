@@ -38,7 +38,9 @@ class AchievementsNotifier extends StateNotifier<AsyncValue<List<AchievementEnti
       return;
     }
     _sub = repo.watchAchievements(userId!).listen((data) {
-      final updated = (data.isEmpty ? base : data)
+      // Mezcla logros base con los almacenados para evitar perder nuevos umbrales.
+      final merged = {...{for (final b in base) b.id: b}, for (final d in data) d.id: d}.values.toList();
+      final updated = merged
           .map((a) => AchievementEntity(
                 id: a.id,
                 title: a.title,

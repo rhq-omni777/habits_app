@@ -30,6 +30,16 @@ class StatsPage extends ConsumerWidget {
           children: [
             Text('Cumplimiento semanal', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 12),
+            Row(
+              children: [
+                _SummaryChip(label: 'Completados (7d)', value: '$weeklyCompleted'),
+                const SizedBox(width: 8),
+                _SummaryChip(label: 'Hábitos activos', value: '${habits.length}'),
+                const Spacer(),
+                _SummaryChip(label: 'Hoy', value: '$todayCompleted'),
+              ],
+            ),
+            const SizedBox(height: 12),
             SizedBox(
               height: 200,
               child: BarChart(
@@ -143,6 +153,33 @@ class StatsPage extends ConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _SummaryChip extends StatelessWidget {
+  const _SummaryChip({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+          Text(value, style: Theme.of(context).textTheme.titleMedium),
+        ],
+      ),
     );
   }
 }
