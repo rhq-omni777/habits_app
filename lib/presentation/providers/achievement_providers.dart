@@ -74,19 +74,76 @@ class AchievementsNotifier extends StateNotifier<AsyncValue<List<AchievementEnti
           unlocked: false,
         ),
         AchievementEntity(
+          id: 'streak14',
+          title: 'Maestro semanal',
+          description: '14 días con tus hábitos',
+          threshold: 14,
+          unlocked: false,
+        ),
+        AchievementEntity(
+          id: 'streak30',
+          title: 'Leyenda de la racha',
+          description: '30 días de constancia',
+          threshold: 30,
+          unlocked: false,
+        ),
+        AchievementEntity(
           id: 'completions10',
           title: 'Pequeños pasos',
           description: '10 hábitos completados en total',
           threshold: 10,
           unlocked: false,
         ),
-      ].map((a) => AchievementEntity(
-            id: a.id,
-            title: a.title,
-            description: a.description,
-            threshold: a.threshold,
-            unlocked: progressCount >= a.threshold,
-          ))
+        AchievementEntity(
+          id: 'completions25',
+          title: 'Rutina firme',
+          description: '25 hábitos completados en total',
+          threshold: 25,
+          unlocked: false,
+        ),
+        AchievementEntity(
+          id: 'completions50',
+          title: 'Cincuenta logros',
+          description: '50 hábitos completados',
+          threshold: 50,
+          unlocked: false,
+        ),
+        AchievementEntity(
+          id: 'completions75',
+          title: 'Disciplina total',
+          description: '75 hábitos completados',
+          threshold: 75,
+          unlocked: false,
+        ),
+        AchievementEntity(
+          id: 'completions100',
+          title: 'Centurion saludable',
+          description: '100 hábitos completados',
+          threshold: 100,
+          unlocked: false,
+        ),
+        AchievementEntity(
+          id: 'completions150',
+          title: 'Héroe de hábitos',
+          description: '150 hábitos completados',
+          threshold: 150,
+          unlocked: false,
+        ),
+        AchievementEntity(
+          id: 'completions200',
+          title: 'Maratón de constancia',
+          description: '200 hábitos completados',
+          threshold: 200,
+          unlocked: false,
+        ),
+      ]
+          .map((a) => AchievementEntity(
+                id: a.id,
+                title: a.title,
+                description: a.description,
+                threshold: a.threshold,
+                unlocked: progressCount >= a.threshold,
+              ))
           .toList();
 
   @override

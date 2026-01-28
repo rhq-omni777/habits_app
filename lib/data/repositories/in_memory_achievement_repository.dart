@@ -105,6 +105,13 @@ class InMemoryAchievementRepository implements AchievementRepository {
           threshold: 150,
           unlocked: false,
         ),
+        const AchievementModel(
+          id: 'completions200',
+          title: 'Maratón de constancia',
+          description: '200 hábitos completados',
+          threshold: 200,
+          unlocked: false,
+        ),
       ]);
     }
     Future.microtask(_store.emitAchievements);

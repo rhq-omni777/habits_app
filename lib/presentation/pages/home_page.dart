@@ -56,7 +56,7 @@ class HomePage extends ConsumerWidget {
             final todayDone = habits.where((h) => _completedToday(h.id, progress)).length;
 
             return ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
               children: [
                 Text('Tu progreso de hoy', style: textTheme.headlineSmall),
                 const SizedBox(height: 6),
