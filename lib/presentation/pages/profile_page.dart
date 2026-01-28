@@ -55,9 +55,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ],
       ),
     );
-    if (result == true) {
-      await _runAuthAction(context, () => ref.read(authControllerProvider.notifier).doUpdateEmail(emailCtrl.text.trim(), currentPassword: passCtrl.text.isEmpty ? null : passCtrl.text));
-    }
+    if (!context.mounted) return;
+    if (result != true) return;
+    await _runAuthAction(context, () => ref.read(authControllerProvider.notifier).doUpdateEmail(emailCtrl.text.trim(), currentPassword: passCtrl.text.isEmpty ? null : passCtrl.text));
   }
 
   Future<void> _changePassword(BuildContext context, WidgetRef ref) async {
@@ -99,9 +99,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ],
       ),
     );
-    if (result == true) {
-      await _runAuthAction(context, () => ref.read(authControllerProvider.notifier).doUpdatePassword(currentPassword: currentCtrl.text.isEmpty ? null : currentCtrl.text, newPassword: newCtrl.text));
-    }
+    if (!context.mounted) return;
+    if (result != true) return;
+    await _runAuthAction(context, () => ref.read(authControllerProvider.notifier).doUpdatePassword(currentPassword: currentCtrl.text.isEmpty ? null : currentCtrl.text, newPassword: newCtrl.text));
   }
 
   Future<void> _linkEmailPassword(BuildContext context, WidgetRef ref) async {
@@ -144,18 +144,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ],
       ),
     );
-    if (result == true) {
-      await _runAuthAction(context, () => ref.read(authControllerProvider.notifier).doLinkEmailPassword(email: emailCtrl.text.trim(), password: passCtrl.text));
-    }
+    if (!context.mounted) return;
+    if (result != true) return;
+    await _runAuthAction(context, () => ref.read(authControllerProvider.notifier).doLinkEmailPassword(email: emailCtrl.text.trim(), password: passCtrl.text));
   }
 
   Future<void> _runAuthAction(BuildContext context, Future<void> Function() action) async {
     try {
       await action();
-      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cambios guardados')));
     } catch (e) {
-      if (!mounted) return;
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
