@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/habit_progress_entity.dart';
+import '../../domain/entities/habit_entity.dart';
 import '../providers/habit_providers.dart';
 import '../providers/progress_providers.dart';
 
@@ -12,7 +13,7 @@ class StatsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final progress = (ref.watch(progressProvider).value ?? []).map(_normalize).toList();
     final habits = ref.watch(habitsProvider).value ?? [];
-    final habitNames = {for (final h in habits) h.id: h.title};
+    final habitMap = {for (final h in habits) h.id: h};
     final now = DateTime.now().toUtc();
     final days = List.generate(7, (i) => DateTime.utc(now.year, now.month, now.day).subtract(Duration(days: 6 - i)));
     final counts = _lastSevenDaysCounts(progress, days);
@@ -50,7 +51,7 @@ class StatsPage extends ConsumerWidget {
                       if (!event.isInterestedForInteractions || response?.spot == null) return;
                       final index = response!.spot!.touchedBarGroupIndex;
                       final day = days[index];
-                      _showDayDetails(context, day, progress, habitNames);
+                      _showDayDetails(context, day, progress, habitMap);
                     },
                   ),
                   gridData: const FlGridData(show: false),
@@ -125,11 +126,12 @@ class StatsPage extends ConsumerWidget {
     BuildContext context,
     DateTime day,
     List<HabitProgressEntity> progress,
-    Map<String, String> habitNames,
+    Map<String, HabitEntity> habitMap,
   ) async {
     final completed = progress
         .where((p) => p.date == day && p.completed)
-        .map((p) => habitNames[p.habitId] ?? 'Hábito')
+        .map((p) => habitMap[p.habitId])
+        .whereType<HabitEntity>()
         .toList();
 
     await showModalBottomSheet(
@@ -148,7 +150,15 @@ class StatsPage extends ConsumerWidget {
               if (completed.isEmpty)
                 Text('No marcaste hábitos ese día.', style: Theme.of(ctx).textTheme.bodyMedium)
               else
-                ...completed.map((name) => ListTile(leading: const Icon(Icons.check), title: Text(name))),
+                ...completed.map(
+                  (habit) => ListTile(
+                    leading: Icon(
+                      IconData(habit.iconCodePoint, fontFamily: habit.iconFontFamily, fontPackage: habit.iconFontPackage),
+                      color: Theme.of(ctx).colorScheme.primary,
+                    ),
+                    title: Text(habit.title),
+                  ),
+                ),
             ],
           ),
         );
