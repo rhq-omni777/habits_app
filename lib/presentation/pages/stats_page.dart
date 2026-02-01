@@ -88,7 +88,6 @@ class StatsPage extends ConsumerWidget {
               selectedIndex: selectedDayIndex,
               progress: progress,
               habitMap: habitMap,
-              onClearSelected: () => ref.read(selectedDayIndexProvider.notifier).state = null,
             ),
             const SizedBox(height: 12),
             Row(
@@ -140,14 +139,12 @@ class _DayDetails extends StatelessWidget {
     required this.selectedIndex,
     required this.progress,
     required this.habitMap,
-    required this.onClearSelected,
   });
 
   final List<DateTime> days;
   final int? selectedIndex;
   final List<HabitProgressEntity> progress;
   final Map<String, HabitEntity> habitMap;
-  final VoidCallback onClearSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -174,22 +171,11 @@ class _DayDetails extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Text(
-                  day == null
-                      ? 'Toca una barra para ver detalles'
-                      : 'Completados el ${day.day.toString().padLeft(2, '0')}/${day.month.toString().padLeft(2, '0')}',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const Spacer(),
-                if (day != null)
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    tooltip: 'Cerrar',
-                    onPressed: onClearSelected,
-                  ),
-              ],
+            Text(
+              day == null
+                  ? 'Toca una barra para ver detalles'
+                  : 'Completados el ${day.day.toString().padLeft(2, '0')}/${day.month.toString().padLeft(2, '0')}',
+              style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
             if (day == null)
