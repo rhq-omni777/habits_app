@@ -21,6 +21,18 @@ class NotificationsService {
     const initSettings = InitializationSettings(android: androidSettings);
     await _plugin.initialize(initSettings);
     tz.initializeTimeZones();
+    _configureLocalTimezone();
+  }
+
+  void _configureLocalTimezone() {
+    final offset = DateTime.now().timeZoneOffset;
+    final offsetHours = offset.inHours;
+    final etcName = 'Etc/GMT${offsetHours <= 0 ? '+' : '-'}${offsetHours.abs()}';
+    try {
+      tz.setLocalLocation(tz.getLocation(etcName));
+    } catch (_) {
+      tz.setLocalLocation(tz.getLocation('Etc/UTC'));
+    }
   }
 
   /// Requests runtime notification permission on Android 13+.
