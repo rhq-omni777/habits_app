@@ -6,6 +6,8 @@ import '../../domain/entities/habit_entity.dart';
 import '../providers/habit_providers.dart';
 import '../providers/progress_providers.dart';
 
+final selectedDayIndexProvider = StateProvider<int?>((_) => null);
+
 class StatsPage extends ConsumerWidget {
   const StatsPage({super.key});
 
@@ -14,6 +16,7 @@ class StatsPage extends ConsumerWidget {
     final progress = (ref.watch(progressProvider).value ?? []).map(_normalize).toList();
     final habits = ref.watch(habitsProvider).value ?? [];
     final habitMap = {for (final h in habits) h.id: h};
+    final selectedDayIndex = ref.watch(selectedDayIndexProvider);
     final now = DateTime.now().toUtc();
     final days = List.generate(7, (i) => DateTime.utc(now.year, now.month, now.day).subtract(Duration(days: 6 - i)));
     final counts = _lastSevenDaysCounts(progress, days);
@@ -50,8 +53,7 @@ class StatsPage extends ConsumerWidget {
                     touchCallback: (event, response) {
                       if (!event.isInterestedForInteractions || response?.spot == null) return;
                       final index = response!.spot!.touchedBarGroupIndex;
-                      final day = days[index];
-                      _showDayDetails(context, day, progress, habitMap);
+                      ref.read(selectedDayIndexProvider.notifier).state = index;
                     },
                   ),
                   gridData: const FlGridData(show: false),
@@ -81,6 +83,14 @@ class StatsPage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
+            _DayDetails(
+              days: days,
+              selectedIndex: selectedDayIndex,
+              progress: progress,
+              habitMap: habitMap,
+              onClearSelected: () => ref.read(selectedDayIndexProvider.notifier).state = null,
+            ),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
@@ -122,47 +132,85 @@ class StatsPage extends ConsumerWidget {
         completed: p.completed,
       );
 
-  Future<void> _showDayDetails(
-    BuildContext context,
-    DateTime day,
-    List<HabitProgressEntity> progress,
-    Map<String, HabitEntity> habitMap,
-  ) async {
-    final completed = progress
-        .where((p) => p.date == day && p.completed)
-        .map((p) => habitMap[p.habitId])
-        .whereType<HabitEntity>()
-        .toList();
+}
 
-    await showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      builder: (ctx) {
-        final label = '${day.day.toString().padLeft(2, '0')}/${day.month.toString().padLeft(2, '0')}';
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Completados el $label', style: Theme.of(ctx).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              if (completed.isEmpty)
-                Text('No marcaste hábitos ese día.', style: Theme.of(ctx).textTheme.bodyMedium)
-              else
-                ...completed.map(
-                  (habit) => ListTile(
-                    leading: Icon(
-                      IconData(habit.iconCodePoint, fontFamily: habit.iconFontFamily, fontPackage: habit.iconFontPackage),
-                      color: Theme.of(ctx).colorScheme.primary,
-                    ),
-                    title: Text(habit.title),
-                  ),
+class _DayDetails extends StatelessWidget {
+  const _DayDetails({
+    required this.days,
+    required this.selectedIndex,
+    required this.progress,
+    required this.habitMap,
+    required this.onClearSelected,
+  });
+
+  final List<DateTime> days;
+  final int? selectedIndex;
+  final List<HabitProgressEntity> progress;
+  final Map<String, HabitEntity> habitMap;
+  final VoidCallback onClearSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final day = selectedIndex != null && selectedIndex! < days.length ? days[selectedIndex!] : null;
+    final completed = day == null
+        ? const <HabitEntity>[]
+        : progress
+            .where((p) => p.date == day && p.completed)
+            .map((p) => habitMap[p.habitId])
+            .whereType<HabitEntity>()
+            .toList();
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 180),
+      child: Container(
+        key: ValueKey(day ?? 'none'),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: scheme.outline.withValues(alpha: 0.08)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  day == null
+                      ? 'Toca una barra para ver detalles'
+                      : 'Completados el ${day.day.toString().padLeft(2, '0')}/${day.month.toString().padLeft(2, '0')}',
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-            ],
-          ),
-        );
-      },
+                const Spacer(),
+                if (day != null)
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    tooltip: 'Cerrar',
+                    onPressed: onClearSelected,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            if (day == null)
+              Text('Toca cualquier barra para ver qué hábitos completaste ese día.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant))
+            else if (completed.isEmpty)
+              Text('No marcaste hábitos ese día.', style: Theme.of(context).textTheme.bodyMedium)
+            else
+              ...completed.map(
+                (habit) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    IconData(habit.iconCodePoint, fontFamily: habit.iconFontFamily, fontPackage: habit.iconFontPackage),
+                    color: scheme.primary,
+                  ),
+                  title: Text(habit.title),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
