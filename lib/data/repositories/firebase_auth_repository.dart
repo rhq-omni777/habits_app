@@ -94,6 +94,7 @@ class FirebaseAuthRepository implements AuthRepository {
     final cred = fb.EmailAuthProvider.credential(email: email, password: password);
     try {
       await user.linkWithCredential(cred);
+      await user.reload();
     } on fb.FirebaseAuthException catch (e) {
       if (e.code == 'provider-already-linked') {
         return; // already has email/password
@@ -106,9 +107,23 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<bool> needsPasswordLink() async {
     final user = _auth.currentUser;
     if (user == null) return false;
-    final providers = user.providerData.map((p) => p.providerId).toSet();
+    await user.reload();
+    final refreshed = _auth.currentUser ?? user;
+    final providers = refreshed.providerData.map((p) => p.providerId).toSet();
     final hasPassword = providers.contains('password');
     final hasGoogle = providers.contains('google.com');
     return hasGoogle && !hasPassword;
+  }
+
+  @override
+  Future<void> deleteAccount({String? currentPassword}) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('No hay usuario autenticado');
+    if (currentPassword != null && user.email != null) {
+      final cred = fb.EmailAuthProvider.credential(email: user.email!, password: currentPassword);
+      await user.reauthenticateWithCredential(cred);
+    }
+    await user.delete();
+    await _googleSignIn.signOut();
   }
 }

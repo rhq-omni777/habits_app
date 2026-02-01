@@ -348,40 +348,45 @@ class _HabitCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    GestureDetector(
-                      onTap: onEditTime,
-                      child: _Pill(label: 'Hora $reminderLabel', icon: Icons.schedule_rounded),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined),
-                          onPressed: onEdit,
-                          tooltip: 'Editar',
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded),
-                          onPressed: onDelete,
-                          tooltip: 'Eliminar',
-                        ),
-                      ],
-                    ),
-                  ],
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 160),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: onEditTime,
+                        child: _Pill(label: 'Hora $reminderLabel', icon: Icons.schedule_rounded),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit_outlined),
+                            onPressed: onEdit,
+                            tooltip: 'Editar',
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline_rounded),
+                            onPressed: onDelete,
+                            tooltip: 'Eliminar',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 14),
-            Row(
+            Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 _Pill(label: 'Racha $streak', icon: Icons.local_fire_department_rounded),
-                const SizedBox(width: 10),
                 _Pill(label: completedToday ? 'Completado' : 'Pendiente', icon: Icons.today_rounded),
-                const Spacer(),
                 TextButton.icon(
                   onPressed: onToggle,
                   icon: Icon(completedToday ? Icons.undo_rounded : Icons.check_rounded),

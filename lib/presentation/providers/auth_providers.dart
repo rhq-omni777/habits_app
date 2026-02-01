@@ -9,6 +9,7 @@ import '../../domain/usecases/sign_up.dart';
 import '../../domain/usecases/update_email.dart';
 import '../../domain/usecases/update_password.dart';
 import '../../domain/usecases/link_email_password.dart';
+import '../../domain/usecases/delete_account.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -41,12 +42,13 @@ final authControllerProvider = StateNotifierProvider<AuthController, AsyncValue<
     updateEmail: UpdateEmail(repo),
     updatePassword: UpdatePassword(repo),
     linkEmailPassword: LinkEmailPassword(repo),
+    deleteAccount: DeleteAccount(repo),
     repo: repo,
   );
 });
 
 class AuthController extends StateNotifier<AsyncValue<UserEntity?>> {
-  AuthController({required this.signIn, required this.signInWithGoogle, required this.signInAnonymously, required this.signUp, required this.signOut, required this.updateEmail, required this.updatePassword, required this.linkEmailPassword, required this.repo})
+  AuthController({required this.signIn, required this.signInWithGoogle, required this.signInAnonymously, required this.signUp, required this.signOut, required this.updateEmail, required this.updatePassword, required this.linkEmailPassword, required this.deleteAccount, required this.repo})
       : super(const AsyncLoading()) {
     _init();
   }
@@ -59,6 +61,7 @@ class AuthController extends StateNotifier<AsyncValue<UserEntity?>> {
   final UpdateEmail updateEmail;
   final UpdatePassword updatePassword;
   final LinkEmailPassword linkEmailPassword;
+  final DeleteAccount deleteAccount;
   final AuthRepository repo;
 
   Future<void> _init() async {
@@ -144,6 +147,16 @@ class AuthController extends StateNotifier<AsyncValue<UserEntity?>> {
       await linkEmailPassword(email, password);
       final user = await repo.currentUser();
       state = AsyncData(user);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+    }
+  }
+
+  Future<void> doDeleteAccount({String? currentPassword}) async {
+    state = const AsyncLoading();
+    try {
+      await deleteAccount(currentPassword: currentPassword);
+      state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);
     }
