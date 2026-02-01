@@ -45,13 +45,33 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<HabitEntity>>> {
   final DeleteHabit deleteHabit;
   final String? userId;
   StreamSubscription<List<HabitEntity>>? _sub;
+  bool _restoredNotifications = false;
 
   Future<void> _init() async {
     if (userId == null) {
       state = const AsyncData([]);
       return;
     }
-    _sub = repo.watchHabits(userId!).listen((data) => state = AsyncData(data));
+    _sub = repo.watchHabits(userId!).listen((data) {
+      state = AsyncData(data);
+      _restoreNotifications(data);
+    });
+  }
+
+  void _restoreNotifications(List<HabitEntity> habits) {
+    if (_restoredNotifications) return;
+    _restoredNotifications = true;
+    for (final habit in habits) {
+      if (habit.notificationsEnabled) {
+        NotificationsService.instance.scheduleDaily(
+          id: NotificationsService.instance.notificationId(habit.id),
+          title: 'Recordatorio: ${habit.title}',
+          body: habit.description,
+          hour: habit.reminderMinutes ~/ 60,
+          minute: habit.reminderMinutes % 60,
+        );
+      }
+    }
   }
 
   Future<void> createHabit(HabitEntity habit) async {
@@ -59,7 +79,7 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<HabitEntity>>> {
     await addHabit(userId!, habit);
     if (habit.notificationsEnabled) {
       await NotificationsService.instance.scheduleDaily(
-        id: habit.id.hashCode,
+        id: NotificationsService.instance.notificationId(habit.id),
         title: 'Recordatorio: ${habit.title}',
         body: habit.description,
         hour: habit.reminderMinutes ~/ 60,
@@ -72,23 +92,24 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<HabitEntity>>> {
     if (userId == null) return;
     await updateHabit(userId!, habit);
     if (habit.notificationsEnabled) {
-      await NotificationsService.instance.cancel(habit.id.hashCode);
+      final notifId = NotificationsService.instance.notificationId(habit.id);
+      await NotificationsService.instance.cancel(notifId);
       await NotificationsService.instance.scheduleDaily(
-        id: habit.id.hashCode,
+        id: notifId,
         title: 'Recordatorio: ${habit.title}',
         body: habit.description,
         hour: habit.reminderMinutes ~/ 60,
         minute: habit.reminderMinutes % 60,
       );
     } else {
-      await NotificationsService.instance.cancel(habit.id.hashCode);
+      await NotificationsService.instance.cancel(NotificationsService.instance.notificationId(habit.id));
     }
   }
 
   Future<void> removeHabit(String habitId) async {
     if (userId == null) return;
     await deleteHabit(userId!, habitId);
-    await NotificationsService.instance.cancel(habitId.hashCode);
+    await NotificationsService.instance.cancel(NotificationsService.instance.notificationId(habitId));
   }
 
   @override

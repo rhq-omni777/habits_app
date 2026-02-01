@@ -7,6 +7,15 @@ class NotificationsService {
   static final NotificationsService instance = NotificationsService._();
   final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
 
+  /// Deterministic notification id from habit id (stable across runs).
+  int notificationId(String habitId) {
+    var hash = 0;
+    for (final codeUnit in habitId.codeUnits) {
+      hash = (hash * 31 + codeUnit) & 0x7fffffff;
+    }
+    return hash;
+  }
+
   Future<void> init() async {
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: androidSettings);
