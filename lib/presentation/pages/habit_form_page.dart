@@ -162,6 +162,9 @@ class _HabitFormPageState extends ConsumerState<HabitFormPage> {
                     final future = existing == null ? notifier.createHabit(habit) : notifier.editHabit(habit);
                     await future;
                     if (!context.mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(existing == null ? 'Hábito creado' : 'Hábito actualizado')),
+                    );
                     Navigator.of(context).pop(true);
                   }
                 },
