@@ -14,6 +14,7 @@ Future<void> main() async {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   }
   await NotificationsService.instance.init();
+  await NotificationsService.instance.requestPermission();
   // Request location once to align time/zone from device GPS if available.
   await LocationService.instance.ensureLocationAccess();
   runApp(const ProviderScope(child: HabitsApp()));

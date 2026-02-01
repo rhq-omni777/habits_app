@@ -72,6 +72,7 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<HabitEntity>>> {
     if (userId == null) return;
     await updateHabit(userId!, habit);
     if (habit.notificationsEnabled) {
+      await NotificationsService.instance.cancel(habit.id.hashCode);
       await NotificationsService.instance.scheduleDaily(
         id: habit.id.hashCode,
         title: 'Recordatorio: ${habit.title}',

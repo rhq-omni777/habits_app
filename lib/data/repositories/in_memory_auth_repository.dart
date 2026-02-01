@@ -95,4 +95,10 @@ class InMemoryAuthRepository implements AuthRepository {
     final isGoogle = user.id.startsWith('google-');
     return isGoogle && !isGuest;
   }
+
+  @override
+  Future<void> deleteAccount({String? currentPassword}) async {
+    _store.currentUser = null;
+    _store.emitAuth(null);
+  }
 }

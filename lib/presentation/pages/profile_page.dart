@@ -57,7 +57,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
     if (!context.mounted) return;
     if (result != true) return;
-    await _runAuthAction(context, () => ref.read(authControllerProvider.notifier).doUpdateEmail(emailCtrl.text.trim(), currentPassword: passCtrl.text.isEmpty ? null : passCtrl.text));
+    await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doUpdateEmail(emailCtrl.text.trim(), currentPassword: passCtrl.text.isEmpty ? null : passCtrl.text));
   }
 
   Future<void> _changePassword(BuildContext context, WidgetRef ref) async {
@@ -101,7 +101,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
     if (!context.mounted) return;
     if (result != true) return;
-    await _runAuthAction(context, () => ref.read(authControllerProvider.notifier).doUpdatePassword(currentPassword: currentCtrl.text.isEmpty ? null : currentCtrl.text, newPassword: newCtrl.text));
+    await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doUpdatePassword(currentPassword: currentCtrl.text.isEmpty ? null : currentCtrl.text, newPassword: newCtrl.text));
   }
 
   Future<void> _linkEmailPassword(BuildContext context, WidgetRef ref) async {
@@ -146,12 +146,60 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
     if (!context.mounted) return;
     if (result != true) return;
-    await _runAuthAction(context, () => ref.read(authControllerProvider.notifier).doLinkEmailPassword(email: emailCtrl.text.trim(), password: passCtrl.text));
+    await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doLinkEmailPassword(email: emailCtrl.text.trim(), password: passCtrl.text));
   }
 
-  Future<void> _runAuthAction(BuildContext context, Future<void> Function() action) async {
+  Future<void> _deleteAccount(BuildContext context, WidgetRef ref, {required bool requiresPassword}) async {
+    final passCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar cuenta'),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Se borrarán tus datos asociados a esta cuenta. Esta acción no se puede deshacer.'),
+              if (requiresPassword) ...[
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: passCtrl,
+                  decoration: const InputDecoration(labelText: 'Contraseña actual'),
+                  obscureText: true,
+                  validator: (v) => v != null && v.length >= 6 ? null : 'Ingresa la contraseña',
+                ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            onPressed: () {
+              if (!requiresPassword || (formKey.currentState?.validate() ?? false)) {
+                Navigator.pop(ctx, true);
+              }
+            },
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+    if (!context.mounted || result != true) return;
+    await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doDeleteAccount(currentPassword: passCtrl.text.isEmpty ? null : passCtrl.text));
+    if (context.mounted) {
+      context.go('/login');
+    }
+  }
+
+  Future<void> _runAuthAction(BuildContext context, WidgetRef ref, Future<void> Function() action) async {
     try {
       await action();
+      ref.invalidate(needsPasswordLinkProvider);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cambios guardados')));
     } catch (e) {
@@ -167,6 +215,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final habits = ref.watch(habitsProvider).value ?? [];
     final needsLink = ref.watch(needsPasswordLinkProvider).maybeWhen(data: (v) => v, orElse: () => false);
     final isGuest = (user?.email.isEmpty ?? true);
+    final showChangePassword = !isGuest && !needsLink;
+    final requiresPasswordForDelete = showChangePassword;
 
     final maxStreak = _maxStreak(progress);
     final totalCompletions = progress.length;
@@ -197,11 +247,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               const SizedBox(height: 14),
               _SecurityActions(
                 onChangeEmail: () => _changeEmail(context, ref),
-                onChangePassword: () => _changePassword(context, ref),
-                onLinkPassword: () => _linkEmailPassword(context, ref),
+                onChangePassword: showChangePassword ? () => _changePassword(context, ref) : null,
+                onLinkPassword: needsLink && !isGuest ? () => _linkEmailPassword(context, ref) : null,
                 showLinkPassword: needsLink && !isGuest,
                 isGuest: isGuest,
                 onCreateAccount: () => context.go('/register'),
+                onDeleteAccount: () => _deleteAccount(context, ref, requiresPassword: requiresPasswordForDelete),
               ),
               const SizedBox(height: 20),
               Text('Logros', style: Theme.of(context).textTheme.titleMedium),
@@ -392,14 +443,15 @@ class _StatCard extends StatelessWidget {
 }
 
 class _SecurityActions extends StatelessWidget {
-  const _SecurityActions({required this.onChangeEmail, required this.onChangePassword, required this.onLinkPassword, required this.showLinkPassword, required this.isGuest, required this.onCreateAccount});
+  const _SecurityActions({required this.onChangeEmail, this.onChangePassword, this.onLinkPassword, required this.showLinkPassword, required this.isGuest, required this.onCreateAccount, required this.onDeleteAccount});
 
   final VoidCallback onChangeEmail;
-  final VoidCallback onChangePassword;
-  final VoidCallback onLinkPassword;
+  final VoidCallback? onChangePassword;
+  final VoidCallback? onLinkPassword;
   final bool showLinkPassword;
   final bool isGuest;
   final VoidCallback onCreateAccount;
+  final VoidCallback onDeleteAccount;
 
   @override
   Widget build(BuildContext context) {
@@ -429,12 +481,13 @@ class _SecurityActions extends StatelessWidget {
                   icon: const Icon(Icons.alternate_email),
                   label: const Text('Cambiar correo'),
                 ),
-                OutlinedButton.icon(
-                  onPressed: isGuest ? null : onChangePassword,
-                  icon: const Icon(Icons.password),
-                  label: const Text('Cambiar contraseña'),
-                ),
-                if (showLinkPassword)
+                if (onChangePassword != null)
+                  OutlinedButton.icon(
+                    onPressed: isGuest ? null : onChangePassword,
+                    icon: const Icon(Icons.password),
+                    label: const Text('Cambiar contraseña'),
+                  ),
+                if (showLinkPassword && onLinkPassword != null)
                   OutlinedButton.icon(
                     onPressed: onLinkPassword,
                     icon: const Icon(Icons.link),
@@ -446,6 +499,12 @@ class _SecurityActions extends StatelessWidget {
                     icon: const Icon(Icons.person_add_alt),
                     label: const Text('Crear mi cuenta'),
                   ),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+                  onPressed: onDeleteAccount,
+                  icon: const Icon(Icons.delete_forever),
+                  label: const Text('Eliminar cuenta'),
+                ),
               ],
             ),
           ],

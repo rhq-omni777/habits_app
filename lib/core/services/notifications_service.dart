@@ -14,6 +14,14 @@ class NotificationsService {
     tz.initializeTimeZones();
   }
 
+  /// Requests runtime notification permission on Android 13+.
+  Future<bool> requestPermission() async {
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin == null) return false;
+    final granted = await androidPlugin.requestNotificationsPermission();
+    return granted ?? false;
+  }
+
   Future<void> scheduleDaily({
     required int id,
     required String title,
