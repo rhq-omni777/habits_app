@@ -165,6 +165,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final achievements = ref.watch(achievementsProvider);
     final progress = ref.watch(progressProvider).value ?? [];
     final habits = ref.watch(habitsProvider).value ?? [];
+    final needsLink = ref.watch(needsPasswordLinkProvider).maybeWhen(data: (v) => v, orElse: () => false);
+    final isGuest = (user?.email.isEmpty ?? true);
 
     final maxStreak = _maxStreak(progress);
     final totalCompletions = progress.length;
@@ -197,6 +199,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 onChangeEmail: () => _changeEmail(context, ref),
                 onChangePassword: () => _changePassword(context, ref),
                 onLinkPassword: () => _linkEmailPassword(context, ref),
+                showLinkPassword: needsLink && !isGuest,
+                isGuest: isGuest,
+                onCreateAccount: () => context.go('/register'),
               ),
               const SizedBox(height: 20),
               Text('Logros', style: Theme.of(context).textTheme.titleMedium),
@@ -387,11 +392,14 @@ class _StatCard extends StatelessWidget {
 }
 
 class _SecurityActions extends StatelessWidget {
-  const _SecurityActions({required this.onChangeEmail, required this.onChangePassword, required this.onLinkPassword});
+  const _SecurityActions({required this.onChangeEmail, required this.onChangePassword, required this.onLinkPassword, required this.showLinkPassword, required this.isGuest, required this.onCreateAccount});
 
   final VoidCallback onChangeEmail;
   final VoidCallback onChangePassword;
   final VoidCallback onLinkPassword;
+  final bool showLinkPassword;
+  final bool isGuest;
+  final VoidCallback onCreateAccount;
 
   @override
   Widget build(BuildContext context) {
@@ -416,9 +424,28 @@ class _SecurityActions extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                OutlinedButton.icon(onPressed: onChangeEmail, icon: const Icon(Icons.alternate_email), label: const Text('Cambiar correo')),
-                OutlinedButton.icon(onPressed: onChangePassword, icon: const Icon(Icons.password), label: const Text('Cambiar contraseña')),
-                OutlinedButton.icon(onPressed: onLinkPassword, icon: const Icon(Icons.link), label: const Text('Crear contraseña (Google)')),
+                OutlinedButton.icon(
+                  onPressed: isGuest ? null : onChangeEmail,
+                  icon: const Icon(Icons.alternate_email),
+                  label: const Text('Cambiar correo'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: isGuest ? null : onChangePassword,
+                  icon: const Icon(Icons.password),
+                  label: const Text('Cambiar contraseña'),
+                ),
+                if (showLinkPassword)
+                  OutlinedButton.icon(
+                    onPressed: onLinkPassword,
+                    icon: const Icon(Icons.link),
+                    label: const Text('Crear contraseña (Google)'),
+                  ),
+                if (isGuest)
+                  FilledButton.icon(
+                    onPressed: onCreateAccount,
+                    icon: const Icon(Icons.person_add_alt),
+                    label: const Text('Crear mi cuenta'),
+                  ),
               ],
             ),
           ],

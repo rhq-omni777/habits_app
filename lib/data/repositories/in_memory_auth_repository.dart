@@ -84,4 +84,15 @@ class InMemoryAuthRepository implements AuthRepository {
     _store.currentUser = UserModel(id: user.id, email: email, displayName: user.displayName);
     _store.emitAuth(_store.currentUser);
   }
+
+  @override
+  Future<bool> needsPasswordLink() async {
+    final user = _store.currentUser;
+    if (user == null) return false;
+    // En memoria: consideramos que usuarios con email vacío son invitados,
+    // los de Google son los creados por signInWithGoogle (tienen correo simulado) sin password.
+    final isGuest = user.email.isEmpty;
+    final isGoogle = user.id.startsWith('google-');
+    return isGoogle && !isGuest;
+  }
 }

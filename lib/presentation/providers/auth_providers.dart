@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/firebase_auth_repository.dart';
 import '../../domain/entities/user_entity.dart';
-import '../../domain/repositories/auth_repository.dart';
 import '../../domain/usecases/sign_in.dart';
 import '../../domain/usecases/sign_in_anonymously.dart';
 import '../../domain/usecases/sign_in_with_google.dart';
@@ -10,9 +9,15 @@ import '../../domain/usecases/sign_up.dart';
 import '../../domain/usecases/update_email.dart';
 import '../../domain/usecases/update_password.dart';
 import '../../domain/usecases/link_email_password.dart';
+import '../../domain/repositories/auth_repository.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return FirebaseAuthRepository();
+});
+
+final needsPasswordLinkProvider = FutureProvider<bool>((ref) async {
+  final repo = ref.watch(authRepositoryProvider);
+  return repo.needsPasswordLink();
 });
 
 final authChangesProvider = Provider<Stream<UserEntity?>>((ref) {

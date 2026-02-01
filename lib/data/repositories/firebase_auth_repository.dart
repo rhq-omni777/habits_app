@@ -101,4 +101,14 @@ class FirebaseAuthRepository implements AuthRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<bool> needsPasswordLink() async {
+    final user = _auth.currentUser;
+    if (user == null) return false;
+    final providers = user.providerData.map((p) => p.providerId).toSet();
+    final hasPassword = providers.contains('password');
+    final hasGoogle = providers.contains('google.com');
+    return hasGoogle && !hasPassword;
+  }
 }

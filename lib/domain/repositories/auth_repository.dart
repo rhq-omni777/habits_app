@@ -11,4 +11,5 @@ abstract class AuthRepository {
   Future<void> updateEmail({required String newEmail, String? currentPassword});
   Future<void> updatePassword({String? currentPassword, required String newPassword});
   Future<void> linkEmailPassword({required String email, required String password});
+  Future<bool> needsPasswordLink();
 }
