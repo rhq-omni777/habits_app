@@ -120,7 +120,12 @@ class HomePage extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/habit/new'),
+        onPressed: () async {
+          final created = await context.push('/habit/new');
+          if (context.mounted && created == true) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Hábito creado')));
+          }
+        },
         icon: const Icon(Icons.add),
         label: const Text('Nuevo hábito'),
       ),
@@ -380,13 +385,12 @@ class _HabitCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 14),
-            Wrap(
-              spacing: 10,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
+            Row(
               children: [
                 _Pill(label: 'Racha $streak', icon: Icons.local_fire_department_rounded),
+                const SizedBox(width: 10),
                 _Pill(label: completedToday ? 'Completado' : 'Pendiente', icon: Icons.today_rounded),
+                const Spacer(),
                 TextButton.icon(
                   onPressed: onToggle,
                   icon: Icon(completedToday ? Icons.undo_rounded : Icons.check_rounded),
