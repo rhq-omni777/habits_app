@@ -22,16 +22,37 @@ class NotificationsService {
     await _plugin.initialize(initSettings);
     tz.initializeTimeZones();
     _configureLocalTimezone();
+    final granted = await requestPermission();
+    // Debug trace: permission and zone
+    // ignore: avoid_print
+    print('[Notifications] permission=${granted ? 'granted' : 'denied'} zone=${tz.local.name}');
   }
 
   void _configureLocalTimezone() {
-    final offset = DateTime.now().timeZoneOffset;
-    final offsetHours = offset.inHours;
-    final etcName = 'Etc/GMT${offsetHours <= 0 ? '+' : '-'}${offsetHours.abs()}';
+    final offsetMinutes = DateTime.now().timeZoneOffset.inMinutes;
+
+    // Quick mapping by offset to stable IANA zone ids (extend as needed).
+    const offsetToZone = {
+      -300: 'America/Guayaquil', // Ecuador (UTC-5)
+      -240: 'America/Bogota',
+      -360: 'America/Mexico_City',
+      0: 'UTC',
+    };
+
+    final zoneId = offsetToZone[offsetMinutes] ?? 'UTC';
     try {
-      tz.setLocalLocation(tz.getLocation(etcName));
-    } catch (_) {
-      tz.setLocalLocation(tz.getLocation('Etc/UTC'));
+      if (zoneId == 'UTC') {
+        tz.setLocalLocation(tz.UTC);
+      } else {
+        final loc = tz.getLocation(zoneId);
+        tz.setLocalLocation(loc);
+      }
+      // ignore: avoid_print
+      print('[Notifications] set local zone to $zoneId (offset minutes=$offsetMinutes)');
+    } catch (e) {
+      tz.setLocalLocation(tz.UTC);
+      // ignore: avoid_print
+      print('[Notifications] fallback zone UTC (offset minutes=$offsetMinutes) error=$e');
     }
   }
 
@@ -55,6 +76,8 @@ class NotificationsService {
     if (scheduled.isBefore(now)) {
       scheduled = scheduled.add(const Duration(days: 1));
     }
+    // ignore: avoid_print
+    print('[Notifications] scheduling id=$id at ${scheduled.toIso8601String()} local=${tz.local.name}');
     await _plugin.zonedSchedule(
       id,
       title,
@@ -62,9 +85,13 @@ class NotificationsService {
       scheduled,
       const NotificationDetails(
         android: AndroidNotificationDetails(
-          'habits_channel',
+          'habits_reminders',
           'Recordatorios de hábitos',
-          importance: Importance.high,
+          channelDescription: 'Notificaciones diarias para recordar tus hábitos',
+          importance: Importance.max,
+          priority: Priority.high,
+          enableVibration: true,
+          playSound: true,
           icon: 'ic_stat_habit',
         ),
       ),
