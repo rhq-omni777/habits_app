@@ -149,7 +149,139 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doLinkEmailPassword(email: emailCtrl.text.trim(), password: passCtrl.text));
   }
 
-  Future<void> _deleteAccount(BuildContext context, WidgetRef ref, {required bool requiresPassword}) async {
+  Future<void> _upgradeGuestAccount(BuildContext context, WidgetRef ref) async {
+    final name = ref.read(authStateProvider).valueOrNull?.displayName?.trim().isNotEmpty == true
+        ? ref.read(authStateProvider).valueOrNull!.displayName!
+        : 'Invitado';
+    final emailCtrl = TextEditingController();
+    final passCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool loadingEmail = false;
+    bool loadingGoogle = false;
+
+    await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetCtx) {
+        final bottom = MediaQuery.of(sheetCtx).viewInsets.bottom;
+        return Padding(
+          padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottom),
+          child: StatefulBuilder(
+            builder: (ctx, setState) {
+              Future<void> submitEmail() async {
+                if (!(formKey.currentState?.validate() ?? false)) return;
+                setState(() => loadingEmail = true);
+                try {
+                  await ref.read(authControllerProvider.notifier).doSignUp(emailCtrl.text.trim(), passCtrl.text, name);
+                  if (!mounted) return;
+                  Navigator.of(context).pop(true);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cuenta creada y progreso guardado')));
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                } finally {
+                  if (mounted) setState(() => loadingEmail = false);
+                }
+              }
+
+              Future<void> submitGoogle() async {
+                setState(() => loadingGoogle = true);
+                try {
+                  await ref.read(authControllerProvider.notifier).doGoogleSignIn();
+                  if (!mounted) return;
+                  Navigator.of(context).pop(true);
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cuenta creada con Google')));
+                } catch (e) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                } finally {
+                  if (mounted) setState(() => loadingGoogle = false);
+                }
+              }
+
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.person_add_alt_1),
+                        const SizedBox(width: 8),
+                        Text('Guardar progreso y crear cuenta', style: Theme.of(context).textTheme.titleMedium),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    ElevatedButton.icon(
+                      onPressed: loadingGoogle ? null : submitGoogle,
+                      icon: loadingGoogle ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.login),
+                      label: const Text('Continuar con Google'),
+                      style: ElevatedButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                    ),
+                    const SizedBox(height: 12),
+                    Form(
+                      key: formKey,
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: emailCtrl,
+                            decoration: const InputDecoration(labelText: 'Correo'),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (v) => v != null && v.contains('@') ? null : 'Correo inválido',
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: passCtrl,
+                            decoration: const InputDecoration(labelText: 'Contraseña (min. 6)'),
+                            obscureText: true,
+                            validator: (v) => v != null && v.length >= 6 ? null : 'Mínimo 6 caracteres',
+                          ),
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            onPressed: loadingEmail ? null : submitEmail,
+                            icon: loadingEmail ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Icon(Icons.mail_outline),
+                            label: const Text('Crear cuenta con correo'),
+                            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteAccount(BuildContext context, WidgetRef ref, {required bool? needsPasswordLink}) async {
+    if (needsPasswordLink == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cargando estado de seguridad, intenta de nuevo')));
+      }
+      return;
+    }
+
+    if (needsPasswordLink == true) {
+      final goAdd = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Agrega una contraseña'),
+          content: const Text('Para eliminar tu cuenta primero crea una contraseña en "Agregar contraseña".'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Agregar contraseña')),
+          ],
+        ),
+      );
+      if (goAdd == true && context.mounted) {
+        await _linkEmailPassword(context, ref);
+      }
+      return;
+    }
+
     final passCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
     final result = await showDialog<bool>(
@@ -163,7 +295,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('Se borrarán tus datos asociados a esta cuenta. Esta acción no se puede deshacer.'),
-              if (requiresPassword) ...[
+              ...[
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: passCtrl,
@@ -180,7 +312,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
             onPressed: () {
-              if (!requiresPassword || (formKey.currentState?.validate() ?? false)) {
+              if (formKey.currentState?.validate() ?? false) {
                 Navigator.pop(ctx, true);
               }
             },
@@ -213,10 +345,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final achievements = ref.watch(achievementsProvider);
     final progress = ref.watch(progressProvider).value ?? [];
     final habits = ref.watch(habitsProvider).value ?? [];
-    final needsLink = ref.watch(needsPasswordLinkProvider).maybeWhen(data: (v) => v, orElse: () => false);
+    final needsLinkAsync = ref.watch(needsPasswordLinkProvider);
+    final bool? needsLink = needsLinkAsync.maybeWhen(data: (v) => v, loading: () => null, orElse: () => null);
     final isGuest = (user?.email.isEmpty ?? true);
-    final showChangePassword = !isGuest && !needsLink;
-    final requiresPasswordForDelete = showChangePassword;
+    final showChangePassword = !isGuest && needsLink == false;
+    final showAddPassword = !isGuest && needsLink == true;
+    final requiresPasswordForDelete = needsLink;
 
     final maxStreak = _maxStreak(progress);
     final totalCompletions = progress.length;
@@ -248,11 +382,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               _SecurityActions(
                 onChangeEmail: () => _changeEmail(context, ref),
                 onChangePassword: showChangePassword ? () => _changePassword(context, ref) : null,
-                onLinkPassword: needsLink && !isGuest ? () => _linkEmailPassword(context, ref) : null,
-                showLinkPassword: needsLink && !isGuest,
+                onLinkPassword: showAddPassword ? () => _linkEmailPassword(context, ref) : null,
+                showLinkPassword: showAddPassword,
+                isLinkStatusLoading: needsLink == null,
                 isGuest: isGuest,
-                onCreateAccount: () => context.go('/register'),
-                onDeleteAccount: () => _deleteAccount(context, ref, requiresPassword: requiresPasswordForDelete),
+                onCreateAccount: () => _upgradeGuestAccount(context, ref),
+                onDeleteAccount: () => _deleteAccount(context, ref, needsPasswordLink: requiresPasswordForDelete),
               ),
               const SizedBox(height: 20),
               Text('Logros', style: Theme.of(context).textTheme.titleMedium),
@@ -443,12 +578,13 @@ class _StatCard extends StatelessWidget {
 }
 
 class _SecurityActions extends StatelessWidget {
-  const _SecurityActions({required this.onChangeEmail, this.onChangePassword, this.onLinkPassword, required this.showLinkPassword, required this.isGuest, required this.onCreateAccount, required this.onDeleteAccount});
+  const _SecurityActions({required this.onChangeEmail, this.onChangePassword, this.onLinkPassword, required this.showLinkPassword, required this.isLinkStatusLoading, required this.isGuest, required this.onCreateAccount, required this.onDeleteAccount});
 
   final VoidCallback onChangeEmail;
   final VoidCallback? onChangePassword;
   final VoidCallback? onLinkPassword;
   final bool showLinkPassword;
+  final bool isLinkStatusLoading;
   final bool isGuest;
   final VoidCallback onCreateAccount;
   final VoidCallback onDeleteAccount;
@@ -491,7 +627,12 @@ class _SecurityActions extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: onLinkPassword,
                     icon: const Icon(Icons.link),
-                    label: const Text('Crear contraseña (Google)'),
+                    label: const Text('Agregar contraseña'),
+                  ),
+                if (isLinkStatusLoading)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 6),
+                    child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
                   ),
                 if (isGuest)
                   FilledButton.icon(

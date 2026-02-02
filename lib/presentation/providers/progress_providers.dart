@@ -14,6 +14,11 @@ final progressRepositoryProvider = Provider<ProgressRepository>((ref) {
   return InMemoryProgressRepository();
 });
 
+DateTime normalizedUtcDay(DateTime dt) {
+  final utc = dt.toUtc();
+  return DateTime.utc(utc.year, utc.month, utc.day);
+}
+
 final progressProvider = StateNotifierProvider<ProgressNotifier, AsyncValue<List<HabitProgressEntity>>>((ref) {
   final auth = ref.watch(authStateProvider).valueOrNull;
   final repo = ref.watch(progressRepositoryProvider);
@@ -51,8 +56,7 @@ class ProgressNotifier extends StateNotifier<AsyncValue<List<HabitProgressEntity
 
   Future<void> toggleToday(String habitId) async {
     if (userId == null) return;
-    final today = DateTime.now().toUtc();
-    final normalized = DateTime.utc(today.year, today.month, today.day);
+    final normalized = normalizedUtcDay(DateTime.now());
     final list = state.value ?? [];
     final exists = list.any((p) => p.habitId == habitId && p.date == normalized && p.completed);
     if (exists) {
@@ -66,7 +70,7 @@ class ProgressNotifier extends StateNotifier<AsyncValue<List<HabitProgressEntity
     final list = state.value ?? [];
     final dates = list.where((p) => p.habitId == habitId && p.completed).map((p) => p.date).toSet();
     int streak = 0;
-    DateTime cursor = DateTime.utc(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    DateTime cursor = normalizedUtcDay(DateTime.now());
     while (dates.contains(cursor)) {
       streak++;
       cursor = cursor.subtract(const Duration(days: 1));

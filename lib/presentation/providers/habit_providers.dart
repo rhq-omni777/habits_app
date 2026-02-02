@@ -69,6 +69,7 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<HabitEntity>>> {
           body: habit.description,
           hour: habit.reminderMinutes ~/ 60,
           minute: habit.reminderMinutes % 60,
+          payload: habit.id,
         );
       }
     }
@@ -84,6 +85,7 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<HabitEntity>>> {
         body: habit.description,
         hour: habit.reminderMinutes ~/ 60,
         minute: habit.reminderMinutes % 60,
+        payload: habit.id,
       );
     }
   }
@@ -100,6 +102,7 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<HabitEntity>>> {
         body: habit.description,
         hour: habit.reminderMinutes ~/ 60,
         minute: habit.reminderMinutes % 60,
+        payload: habit.id,
       );
     } else {
       await NotificationsService.instance.cancel(NotificationsService.instance.notificationId(habit.id));

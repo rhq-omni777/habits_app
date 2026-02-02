@@ -7,14 +7,22 @@ import '../providers/habit_providers.dart';
 import '../providers/progress_providers.dart';
 
 final expandedHabitsProvider = StateProvider<Set<String>>((_) => <String>{});
+final handledNotificationHabitsProvider = StateProvider<Set<String>>((_) => <String>{});
 
 class HomePage extends ConsumerWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, this.initialHabitId});
+
+  final String? initialHabitId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final habitsState = ref.watch(habitsProvider);
     final progressState = ref.watch(progressProvider);
+    final progressList = progressState.when(
+      data: (data) => data,
+      loading: () => const <HabitProgressEntity>[],
+      error: (_, __) => const <HabitProgressEntity>[],
+    );
     final expandedHabits = ref.watch(expandedHabitsProvider);
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -51,9 +59,25 @@ class HomePage extends ConsumerWidget {
         ),
         child: habitsState.when(
           data: (habits) {
-            final progress = progressState.value ?? [];
+            final progress = progressList;
+            final pendingHabitId = initialHabitId;
             final todayTotal = habits.length;
             final todayDone = habits.where((h) => _completedToday(h.id, progress)).length;
+
+            if (pendingHabitId != null && habits.any((h) => h.id == pendingHabitId)) {
+              final handled = ref.read(handledNotificationHabitsProvider);
+              if (!handled.contains(pendingHabitId)) {
+                ref.read(handledNotificationHabitsProvider.notifier).update((s) => {...s, pendingHabitId});
+                ref.read(expandedHabitsProvider.notifier).update((s) => {...s, pendingHabitId});
+                WidgetsBinding.instance.addPostFrameCallback((_) async {
+                  if (!context.mounted) return;
+                  await ref.read(progressProvider.notifier).toggleToday(pendingHabitId);
+                  if (!context.mounted) return;
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(const SnackBar(content: Text('Marcado desde recordatorio')));
+                });
+              }
+            }
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
@@ -66,6 +90,19 @@ class HomePage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 _GuidanceBanner(),
+                if (progressState.isLoading)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8, bottom: 4),
+                    child: LinearProgressIndicator(minHeight: 3),
+                  ),
+                if (progressState.hasError)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 4),
+                    child: Text(
+                      'No se pudo cargar el progreso (modo lectura).',
+                      style: textTheme.bodySmall?.copyWith(color: scheme.error),
+                    ),
+                  ),
                 const SizedBox(height: 18),
                 Row(
                   children: [
@@ -133,8 +170,7 @@ class HomePage extends ConsumerWidget {
   }
 
   bool _completedToday(String habitId, List<HabitProgressEntity> progress) {
-    final today = DateTime.now().toUtc();
-    final normalized = DateTime.utc(today.year, today.month, today.day);
+    final normalized = normalizedUtcDay(DateTime.now());
     return progress.any((p) => p.habitId == habitId && p.date == normalized && p.completed);
   }
 
@@ -353,44 +389,49 @@ class _HabitCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 160),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      GestureDetector(
-                        onTap: onEditTime,
-                        child: _Pill(label: 'Hora $reminderLabel', icon: Icons.schedule_rounded),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit_outlined),
-                            onPressed: onEdit,
-                            tooltip: 'Editar',
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline_rounded),
-                            onPressed: onDelete,
-                            tooltip: 'Eliminar',
-                          ),
-                        ],
-                      ),
-                    ],
+                Flexible(
+                  child: Align(
+                    alignment: Alignment.topRight,
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      alignment: WrapAlignment.end,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: onEditTime,
+                          child: _Pill(label: 'Hora $reminderLabel', icon: Icons.schedule_rounded),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit_outlined),
+                              onPressed: onEdit,
+                              tooltip: 'Editar',
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline_rounded),
+                              onPressed: onDelete,
+                              tooltip: 'Eliminar',
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 14),
-            Row(
+            Wrap(
+              spacing: 10,
+              runSpacing: 8,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              alignment: WrapAlignment.spaceBetween,
               children: [
                 _Pill(label: 'Racha $streak', icon: Icons.local_fire_department_rounded),
-                const SizedBox(width: 10),
                 _Pill(label: completedToday ? 'Completado' : 'Pendiente', icon: Icons.today_rounded),
-                const Spacer(),
                 TextButton.icon(
                   onPressed: onToggle,
                   icon: Icon(completedToday ? Icons.undo_rounded : Icons.check_rounded),

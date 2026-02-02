@@ -14,11 +14,14 @@ import '../../presentation/pages/wellness_library_page.dart';
 import '../../presentation/pages/legal_page.dart';
 import '../../presentation/providers/auth_providers.dart';
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authStream = ref.watch(authChangesProvider);
   final refresh = _StreamListenable(authStream);
   ref.onDispose(refresh.dispose);
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/splash',
     refreshListenable: refresh,
     routes: [
@@ -36,7 +39,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/home',
-        builder: (context, state) => const HomePage(),
+        builder: (context, state) => HomePage(initialHabitId: state.extra as String?),
       ),
       GoRoute(
         path: '/habit/new',
@@ -64,8 +67,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
     redirect: (context, state) {
-      final auth = ref.read(authStateProvider).valueOrNull;
+      final authState = ref.read(authStateProvider);
+      final auth = authState.valueOrNull;
       final loggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+
+      // Mientras resolvemos el estado de sesión mantenemos el splash para evitar el flash de login.
+      if (authState.isLoading) {
+        return state.matchedLocation == '/splash' ? null : '/splash';
+      }
+
       if (auth == null && !loggingIn) return '/login';
       if (auth != null && (state.matchedLocation == '/login' || state.matchedLocation == '/register' || state.matchedLocation == '/splash')) {
         return '/home';
