@@ -7,6 +7,7 @@ import '../providers/habit_providers.dart';
 import '../providers/progress_providers.dart';
 import '../../domain/entities/habit_progress_entity.dart';
 import '../../domain/entities/achievement_entity.dart';
+import '../../domain/errors/auth_failure.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -60,9 +61,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doUpdateEmail(emailCtrl.text.trim(), currentPassword: passCtrl.text.isEmpty ? null : passCtrl.text));
   }
 
-  Future<void> _changePassword(BuildContext context, WidgetRef ref) async {
+  Future<void> _changePassword(BuildContext context, WidgetRef ref, {required bool requiresCurrentPassword}) async {
     final currentCtrl = TextEditingController();
     final newCtrl = TextEditingController();
+    final confirmCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
     final result = await showDialog<bool>(
       context: context,
@@ -77,13 +79,29 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 controller: currentCtrl,
                 decoration: const InputDecoration(labelText: 'Contraseña actual (si aplica)'),
                 obscureText: true,
+                validator: requiresCurrentPassword
+                    ? (v) => v != null && v.length >= 6 ? null : 'Ingresa tu contraseña actual'
+                    : null,
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: newCtrl,
                 decoration: const InputDecoration(labelText: 'Nueva contraseña'),
                 obscureText: true,
-                validator: (v) => v != null && v.length >= 6 ? null : 'Mínimo 6 caracteres',
+                validator: (v) {
+                  if (v == null || v.length < 6) return 'Mínimo 6 caracteres';
+                  if (requiresCurrentPassword && currentCtrl.text.isNotEmpty && currentCtrl.text == v) {
+                    return 'La nueva no puede ser igual a la actual';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: confirmCtrl,
+                decoration: const InputDecoration(labelText: 'Confirmar nueva contraseña'),
+                obscureText: true,
+                validator: (v) => v == newCtrl.text ? null : 'Las contraseñas no coinciden',
               ),
             ],
           ),
@@ -101,10 +119,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
     if (!context.mounted) return;
     if (result != true) return;
-    await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doUpdatePassword(currentPassword: currentCtrl.text.isEmpty ? null : currentCtrl.text, newPassword: newCtrl.text));
+    await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doUpdatePassword(currentPassword: requiresCurrentPassword ? currentCtrl.text : null, newPassword: newCtrl.text));
   }
 
-  Future<void> _linkEmailPassword(BuildContext context, WidgetRef ref) async {
+  Future<String?> _linkEmailPassword(BuildContext context, WidgetRef ref) async {
     final emailCtrl = TextEditingController(text: ref.read(authStateProvider).valueOrNull?.email ?? '');
     final passCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -144,15 +162,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ],
       ),
     );
-    if (!context.mounted) return;
-    if (result != true) return;
-    await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doLinkEmailPassword(email: emailCtrl.text.trim(), password: passCtrl.text));
+    if (!context.mounted) return null;
+    if (result != true) return null;
+    final success = await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doLinkEmailPassword(email: emailCtrl.text.trim(), password: passCtrl.text));
+    return success ? passCtrl.text : null;
   }
 
   Future<void> _upgradeGuestAccount(BuildContext context, WidgetRef ref) async {
-    final name = ref.read(authStateProvider).valueOrNull?.displayName?.trim().isNotEmpty == true
-        ? ref.read(authStateProvider).valueOrNull!.displayName!
-        : 'Invitado';
+    final currentUser = ref.read(authStateProvider).valueOrNull;
+    final displayName = currentUser?.displayName.trim();
+    final name = (displayName?.isNotEmpty ?? false) ? displayName! : 'Invitado';
     final emailCtrl = TextEditingController();
     final passCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -256,7 +275,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-  Future<void> _deleteAccount(BuildContext context, WidgetRef ref, {required bool? needsPasswordLink}) async {
+  Future<void> _deleteAccount(BuildContext context, WidgetRef ref, {required bool? needsPasswordLink, String? prefilledPassword}) async {
     if (needsPasswordLink == null) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cargando estado de seguridad, intenta de nuevo')));
@@ -277,12 +296,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ),
       );
       if (goAdd == true && context.mounted) {
-        await _linkEmailPassword(context, ref);
+        final newPassword = await _linkEmailPassword(context, ref);
+        if (!mounted) return;
+        if (newPassword != null) {
+          await _deleteAccount(context, ref, needsPasswordLink: false, prefilledPassword: newPassword);
+        }
       }
       return;
     }
 
     final passCtrl = TextEditingController();
+    if (prefilledPassword?.isNotEmpty == true) {
+      passCtrl.text = prefilledPassword!;
+    }
     final formKey = GlobalKey<FormState>();
     final result = await showDialog<bool>(
       context: context,
@@ -322,23 +348,47 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       ),
     );
     if (!context.mounted || result != true) return;
-    await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doDeleteAccount(currentPassword: passCtrl.text.isEmpty ? null : passCtrl.text));
+    final deleted = await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doDeleteAccount(currentPassword: passCtrl.text.isEmpty ? null : passCtrl.text));
+    if (!deleted) return;
     if (context.mounted) {
       context.go('/login');
     }
   }
 
-  Future<void> _runAuthAction(BuildContext context, WidgetRef ref, Future<void> Function() action) async {
+  Future<bool> _runAuthAction(BuildContext context, WidgetRef ref, Future<void> Function() action) async {
     try {
       await action();
       ref.invalidate(needsPasswordLinkProvider);
-      if (!context.mounted) return;
+      if (!context.mounted) return true;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cambios guardados')));
+      return true;
     } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (!context.mounted) return false;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(_friendlyAuthMessage(e))));
+      return false;
     }
   }
+
+  String _friendlyAuthMessage(dynamic e) {
+    if (e is AuthFailure) {
+      switch (e.code) {
+        case 'wrong-password':
+          return 'Contraseña actual incorrecta';
+        case 'password-not-linked':
+          return 'Agrega una contraseña primero (usa "Agregar contraseña")';
+        case 'missing-current-password':
+          return 'Ingresa tu contraseña actual para continuar';
+        case 'requires-recent-login':
+          return 'Vuelve a iniciar sesión y reintenta';
+        case 'network':
+          return 'Sin conexión. Verifica tu red';
+        default:
+          return e.message;
+      }
+    }
+    return 'Error: $e';
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authStateProvider).valueOrNull;
@@ -381,7 +431,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               const SizedBox(height: 14),
               _SecurityActions(
                 onChangeEmail: () => _changeEmail(context, ref),
-                onChangePassword: showChangePassword ? () => _changePassword(context, ref) : null,
+                onChangePassword: showChangePassword ? () => _changePassword(context, ref, requiresCurrentPassword: showChangePassword) : null,
                 onLinkPassword: showAddPassword ? () => _linkEmailPassword(context, ref) : null,
                 showLinkPassword: showAddPassword,
                 isLinkStatusLoading: needsLink == null,

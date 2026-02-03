@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../domain/errors/auth_failure.dart';
 import '../providers/auth_providers.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -14,11 +15,72 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  bool _sendingReset = false;
 
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
       ref.read(authControllerProvider.notifier).doSignIn(_email.text.trim(), _password.text.trim());
     }
+  }
+
+  Future<void> _forgotPassword() async {
+    final emailCtrl = TextEditingController(text: _email.text.trim());
+    final formKey = GlobalKey<FormState>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Restablecer contraseña'),
+        content: Form(
+          key: formKey,
+          child: TextFormField(
+            controller: emailCtrl,
+            decoration: const InputDecoration(labelText: 'Correo'),
+            keyboardType: TextInputType.emailAddress,
+            validator: (v) => v != null && v.contains('@') ? null : 'Correo inválido',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
+          FilledButton(
+            onPressed: () {
+              if (formKey.currentState?.validate() ?? false) Navigator.pop(ctx, true);
+            },
+            child: const Text('Enviar enlace'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _sendingReset = true);
+    try {
+      await ref.read(authControllerProvider.notifier).doSendPasswordReset(emailCtrl.text.trim());
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Si el correo existe, enviamos un enlace para restablecer')));
+    } catch (e) {
+      if (!mounted) return;
+      final msg = _friendlyAuthMessage(e);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    } finally {
+      if (mounted) setState(() => _sendingReset = false);
+    }
+  }
+
+  String _friendlyAuthMessage(dynamic e) {
+    if (e is AuthFailure) {
+      switch (e.code) {
+        case 'invalid-email':
+          return 'Correo inválido';
+        case 'user-not-found':
+          return 'Si el correo existe, recibirás un enlace';
+        case 'network':
+          return 'Sin conexión. Intenta de nuevo';
+        case 'wrong-password':
+          return 'Contraseña incorrecta';
+        default:
+          return e.message;
+      }
+    }
+    return 'Error: $e';
   }
 
   @override
@@ -90,6 +152,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 onFieldSubmitted: (_) => _submit(),
                                 validator: (v) => v != null && v.length >= 6 ? null : 'Mínimo 6 caracteres',
                               ),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: authState.isLoading || _sendingReset ? null : _forgotPassword,
+                                  child: const Text('Olvidé mi contraseña'),
+                                ),
+                              ),
                               const SizedBox(height: 20),
                               ElevatedButton(
                                 onPressed: authState.isLoading ? null : _submit,
@@ -117,9 +186,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 Padding(
                                   padding: const EdgeInsets.only(top: 12),
                                   child: Text(
-                                    'Error: ${authState.error}',
+                                    _friendlyAuthMessage(authState.error),
                                     style: TextStyle(color: scheme.error),
                                   ),
+                                ),
+                              if (_sendingReset)
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 8),
+                                  child: LinearProgressIndicator(minHeight: 2),
                                 ),
                             ],
                           ),

@@ -122,11 +122,20 @@ class FirebaseAuthRepository implements AuthRepository {
       if (user == null) {
         throw const AuthFailure(code: 'no-user', message: 'No hay usuario autenticado');
       }
-      if (currentPassword != null && user.email != null) {
-        final cred = fb.EmailAuthProvider.credential(email: user.email!, password: currentPassword);
-        await user.reauthenticateWithCredential(cred);
+
+      final providers = user.providerData.map((p) => p.providerId).toSet();
+      final hasPasswordProvider = providers.contains('password');
+      if (!hasPasswordProvider) {
+        throw const AuthFailure(code: 'password-not-linked', message: 'Agrega una contraseña primero');
       }
+      if (currentPassword == null || currentPassword.isEmpty || user.email == null) {
+        throw const AuthFailure(code: 'missing-current-password', message: 'Ingresa tu contraseña actual');
+      }
+
+      final cred = fb.EmailAuthProvider.credential(email: user.email!, password: currentPassword);
+      await user.reauthenticateWithCredential(cred);
       await user.updatePassword(newPassword);
+      await user.reload();
     });
   }
 
@@ -147,6 +156,13 @@ class FirebaseAuthRepository implements AuthRepository {
         }
         throw _mapAuthError(e);
       }
+    });
+  }
+
+  @override
+  Future<void> sendPasswordReset(String email) async {
+    await _runAuth(() async {
+      await _auth.sendPasswordResetEmail(email: email);
     });
   }
 

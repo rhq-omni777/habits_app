@@ -10,6 +10,7 @@ import '../../domain/usecases/update_email.dart';
 import '../../domain/usecases/update_password.dart';
 import '../../domain/usecases/link_email_password.dart';
 import '../../domain/usecases/delete_account.dart';
+import '../../domain/usecases/send_password_reset.dart';
 import '../../domain/repositories/auth_repository.dart';
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -43,12 +44,13 @@ final authControllerProvider = StateNotifierProvider<AuthController, AsyncValue<
     updatePassword: UpdatePassword(repo),
     linkEmailPassword: LinkEmailPassword(repo),
     deleteAccount: DeleteAccount(repo),
+    sendPasswordReset: SendPasswordReset(repo),
     repo: repo,
   );
 });
 
 class AuthController extends StateNotifier<AsyncValue<UserEntity?>> {
-  AuthController({required this.signIn, required this.signInWithGoogle, required this.signInAnonymously, required this.signUp, required this.signOut, required this.updateEmail, required this.updatePassword, required this.linkEmailPassword, required this.deleteAccount, required this.repo})
+  AuthController({required this.signIn, required this.signInWithGoogle, required this.signInAnonymously, required this.signUp, required this.signOut, required this.updateEmail, required this.updatePassword, required this.linkEmailPassword, required this.deleteAccount, required this.sendPasswordReset, required this.repo})
       : super(const AsyncLoading()) {
     _init();
   }
@@ -62,6 +64,7 @@ class AuthController extends StateNotifier<AsyncValue<UserEntity?>> {
   final UpdatePassword updatePassword;
   final LinkEmailPassword linkEmailPassword;
   final DeleteAccount deleteAccount;
+  final SendPasswordReset sendPasswordReset;
   final AuthRepository repo;
 
   Future<void> _init() async {
@@ -127,6 +130,7 @@ class AuthController extends StateNotifier<AsyncValue<UserEntity?>> {
       state = AsyncData(user);
     } catch (e, st) {
       state = AsyncError(e, st);
+      rethrow;
     }
   }
 
@@ -138,6 +142,7 @@ class AuthController extends StateNotifier<AsyncValue<UserEntity?>> {
       state = AsyncData(user);
     } catch (e, st) {
       state = AsyncError(e, st);
+      rethrow;
     }
   }
 
@@ -149,6 +154,7 @@ class AuthController extends StateNotifier<AsyncValue<UserEntity?>> {
       state = AsyncData(user);
     } catch (e, st) {
       state = AsyncError(e, st);
+      rethrow;
     }
   }
 
@@ -159,6 +165,11 @@ class AuthController extends StateNotifier<AsyncValue<UserEntity?>> {
       state = const AsyncData(null);
     } catch (e, st) {
       state = AsyncError(e, st);
+      rethrow;
     }
+  }
+
+  Future<void> doSendPasswordReset(String email) async {
+    await sendPasswordReset(email);
   }
 }

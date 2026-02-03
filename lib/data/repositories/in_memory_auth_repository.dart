@@ -86,6 +86,12 @@ class InMemoryAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> sendPasswordReset(String email) async {
+    // In-memory: no-op
+    return;
+  }
+
+  @override
   Future<bool> needsPasswordLink() async {
     final user = _store.currentUser;
     if (user == null) return false;
