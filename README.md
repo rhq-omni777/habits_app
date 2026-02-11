@@ -15,7 +15,7 @@ App móvil para crear, seguir y cumplir hábitos diarios con recordatorios local
 - Estado: flutter_riverpod.
 - Routing: go_router.
 - Backend: Firebase (Auth, Firestore), firebase_core.
-- Notificaciones locales + timezone; permisos de ubicación (geolocator) para alinear zona horaria.
+- Notificaciones locales + timezone.
 - UI: Material 3, fl_chart, google_fonts.
 
 ## Estructura rápida
@@ -65,7 +65,7 @@ Más detalles y soluciones rápidas: ver [docs/android_setup.md](docs/android_se
 
 ## Notas y permisos
 - Android 13+: solicita permiso de notificaciones al abrir.
-- Se pide ubicación una vez para ajustar zona horaria; no se guarda ubicación.
+- La app no solicita permisos de ubicación; utiliza la zona horaria del sistema para programar notificaciones.
 - Advertencias `source value 8 is obsolete` del toolchain Java no bloquean el build.
 
 ## Scripts útiles

@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Each user has a collection under users/{uid}/...
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Public/metadata collections (read-only for unauthenticated)
+    match /public/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
+
