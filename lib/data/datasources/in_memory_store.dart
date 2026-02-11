@@ -1,3 +1,6 @@
+// Almacén en memoria usado por los repositorios `InMemory*` para pruebas y demo.
+// Provee colecciones y streams que simulan una base de datos local.
+
 import 'dart:async';
 import '../models/achievement_model.dart';
 import '../models/habit_model.dart';
@@ -29,6 +32,27 @@ class InMemoryStore {
   void emitHabits() => _habitController.add(List.unmodifiable(habits));
   void emitProgress() => _progressController.add(List.unmodifiable(progress));
   void emitAchievements() => _achievementController.add(List.unmodifiable(achievements));
+
+  /// Limpia el estado interno del store y emite colecciones vacías.
+  void clear() {
+    currentUser = null;
+    habits.clear();
+    progress.clear();
+    achievements.clear();
+    // Emitir estados vacíos para que listeners reciban actualización.
+    try {
+      _authController.add(null);
+    } catch (_) {}
+    try {
+      _habitController.add(List.unmodifiable(habits));
+    } catch (_) {}
+    try {
+      _progressController.add(List.unmodifiable(progress));
+    } catch (_) {}
+    try {
+      _achievementController.add(List.unmodifiable(achievements));
+    } catch (_) {}
+  }
 
   void dispose() {
     _authController.close();
