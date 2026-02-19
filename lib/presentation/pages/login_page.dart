@@ -93,6 +93,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final user = authState.valueOrNull;
+    if (user != null) {
+      Future.microtask(() => context.go('/home'));
+      return const SizedBox.shrink();
+    }
     ref.listen(authControllerProvider, (_, next) {
       final user = next.valueOrNull;
       if (user != null) context.go('/home');
@@ -161,20 +166,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               ),
                               const SizedBox(height: 20),
                               ElevatedButton(
-                                onPressed: authState.isLoading ? null : _submit,
+                                onPressed: authState.isLoading || user != null ? null : _submit,
                                 child: authState.isLoading
                                     ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
                                     : const Text('Entrar'),
                               ),
                               const SizedBox(height: 8),
                               OutlinedButton.icon(
-                                onPressed: authState.isLoading ? null : () => ref.read(authControllerProvider.notifier).doGoogleSignIn(),
+                                onPressed: authState.isLoading || user != null ? null : () => ref.read(authControllerProvider.notifier).doGoogleSignIn(),
                                 icon: const Icon(Icons.login),
                                 label: const Text('Continuar con Google'),
                               ),
                               const SizedBox(height: 8),
                               OutlinedButton.icon(
-                                onPressed: authState.isLoading ? null : () => ref.read(authControllerProvider.notifier).doGuestSignIn(),
+                                onPressed: authState.isLoading || user != null ? null : () => ref.read(authControllerProvider.notifier).doGuestSignIn(),
                                 icon: const Icon(Icons.person_outline),
                                 label: const Text('Entrar como invitado'),
                               ),

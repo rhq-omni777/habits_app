@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/habit_entity.dart';
 import '../providers/habit_providers.dart';
@@ -159,13 +160,20 @@ class _HabitFormPageState extends ConsumerState<HabitFormPage> {
                     );
 
                     final notifier = ref.read(habitsProvider.notifier);
-                    final future = existing == null ? notifier.createHabit(habit) : notifier.editHabit(habit);
-                    await future;
+                    try {
+                      final future = existing == null ? notifier.createHabit(habit) : notifier.editHabit(habit);
+                      await future;
+                    } catch (_) {
+                      // Ignorar error de notificación
+                    }
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(existing == null ? 'Hábito creado' : 'Hábito actualizado')),
                     );
                     Navigator.of(context).pop(true);
+                    if (existing != null && context.mounted) {
+                      context.go('/home');
+                    }
                   }
                 },
                 child: Text(widget.habit == null ? 'Guardar' : 'Actualizar'),
