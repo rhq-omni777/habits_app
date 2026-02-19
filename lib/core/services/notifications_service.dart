@@ -22,18 +22,25 @@ class NotificationsService {
 
   Future<void> init({Future<void> Function(NotificationResponse response)? onSelect}) async {
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const darwinSettings = DarwinInitializationSettings(
-      requestAlertPermission: false,
-      requestBadgePermission: false,
-      requestSoundPermission: false,
+    final iosSettings = IOSInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+      requestCarPlayPermission: true,
     );
-    const initSettings = InitializationSettings(android: androidSettings, iOS: darwinSettings, macOS: darwinSettings);
+    final macSettings = DarwinInitializationSettings();
+    final initSettings = InitializationSettings(
+      android: androidSettings,
+      iOS: iosSettings,
+      macOS: macSettings,
+    );
 
     await _configureLocalTimezone();
 
     await _plugin.initialize(
-      initSettings,
+      settings: initSettings,
       onDidReceiveNotificationResponse: onSelect ?? _defaultOnSelect,
+      onDidReceiveBackgroundNotificationResponse: _backgroundNotificationCallback,
     );
     await _ensureAndroidChannel();
     final granted = await requestPermission();
@@ -112,11 +119,11 @@ class NotificationsService {
     }
     debugPrint('[Notifications] scheduling id=$id at ${scheduled.toIso8601String()} local=${tz.local.name}');
     await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      scheduled,
-      const NotificationDetails(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: scheduled,
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           _channelId,
           _channelName,
@@ -129,14 +136,13 @@ class NotificationsService {
         ),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.wallClockTime,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: payload,
     );
   }
 
   Future<void> cancel(int id) async {
-    await _plugin.cancel(id);
+    await _plugin.cancel(id: id);
   }
 
   Future<void> _ensureAndroidChannel() async {
@@ -153,5 +159,11 @@ class NotificationsService {
 
   Future<void> _defaultOnSelect(NotificationResponse response) async {
     debugPrint('[Notifications] tapped payload=${response.payload}');
+  }
+
+  @pragma('vm:entry-point')
+  static Future<void> _backgroundNotificationCallback(NotificationResponse? response) async {
+    if (response == null) return;
+    debugPrint('[Notifications] background tapped payload=${response.payload}');
   }
 }

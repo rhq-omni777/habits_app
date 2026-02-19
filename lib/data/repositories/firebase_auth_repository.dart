@@ -6,7 +6,7 @@ import '../../domain/repositories/auth_repository.dart';
 
 class FirebaseAuthRepository implements AuthRepository {
   final fb.FirebaseAuth _auth = fb.FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
 
   Future<T> _runAuth<T>(Future<T> Function() action) async {
     try {
@@ -42,17 +42,21 @@ class FirebaseAuthRepository implements AuthRepository {
   @override
   Future<UserEntity> signInWithGoogle() async {
     return _runAuth(() async {
-      final googleUser = await _googleSignIn.signInSilently() ?? await _googleSignIn.signIn();
-      if (googleUser == null) {
-        throw const AuthFailure(code: 'cancelled', message: 'Inicio con Google cancelado');
+      await _googleSignIn.initialize();
+      if (_googleSignIn.supportsAuthenticate()) {
+        final googleUser = await _googleSignIn.authenticate();
+        if (googleUser == null) {
+          throw const AuthFailure(code: 'cancelled', message: 'Inicio con Google cancelado');
+        }
+        final googleAuth = await googleUser.authentication;
+        final credential = fb.GoogleAuthProvider.credential(
+          idToken: googleAuth.idToken,
+        );
+        final cred = await _auth.signInWithCredential(credential);
+        return _mapUser(cred.user)!;
+      } else {
+        throw const AuthFailure(code: 'cancelled', message: 'Google Sign-In no soportado en esta plataforma');
       }
-      final googleAuth = await googleUser.authentication;
-      final credential = fb.GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-      final cred = await _auth.signInWithCredential(credential);
-      return _mapUser(cred.user)!;
     });
   }
 
@@ -91,11 +95,6 @@ class FirebaseAuthRepository implements AuthRepository {
     await _runAuth(() async {
       await _auth.signOut();
       await _googleSignIn.signOut();
-      try {
-        await _googleSignIn.disconnect();
-      } catch (_) {
-        // Best-effort; algunos proveedores no permiten disconnect en todas las plataformas.
-      }
     });
   }
 

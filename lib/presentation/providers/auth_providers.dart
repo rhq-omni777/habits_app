@@ -53,6 +53,10 @@ class AuthController extends StateNotifier<AsyncValue<UserEntity?>> {
   AuthController({required this.signIn, required this.signInWithGoogle, required this.signInAnonymously, required this.signUp, required this.signOut, required this.updateEmail, required this.updatePassword, required this.linkEmailPassword, required this.deleteAccount, required this.sendPasswordReset, required this.repo})
       : super(const AsyncLoading()) {
     _init();
+    // Escuchar cambios de usuario y actualizar estado
+    repo.authStateChanges().listen((user) {
+      state = AsyncData(user);
+    });
   }
 
   final SignIn signIn;

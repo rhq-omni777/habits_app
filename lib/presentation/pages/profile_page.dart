@@ -348,19 +348,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       ),
     );
     if (!context.mounted || result != true) return;
-    final deleted = await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doDeleteAccount(currentPassword: passCtrl.text.isEmpty ? null : passCtrl.text));
+    final deleted = await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doDeleteAccount(currentPassword: passCtrl.text.isEmpty ? null : passCtrl.text), successMessage: 'Cuenta eliminada');
     if (!deleted) return;
     if (context.mounted) {
-      context.go('/login');
+      context.go('/login'); // Redirige siempre al login, no a invitado
     }
   }
 
-  Future<bool> _runAuthAction(BuildContext context, WidgetRef ref, Future<void> Function() action) async {
+  Future<bool> _runAuthAction(BuildContext context, WidgetRef ref, Future<void> Function() action, {String? successMessage}) async {
     try {
       await action();
       ref.invalidate(needsPasswordLinkProvider);
       if (!context.mounted) return true;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cambios guardados')));
+      final msg = successMessage ?? 'Cambios guardados';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
       return true;
     } catch (e) {
       if (!context.mounted) return false;
