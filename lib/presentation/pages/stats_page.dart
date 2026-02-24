@@ -18,7 +18,12 @@ class StatsPage extends ConsumerWidget {
     final habitMap = {for (final h in habits) h.id: h};
     final selectedDayIndex = ref.watch(selectedDayIndexProvider);
     final now = DateTime.now().toUtc();
-    final days = List.generate(7, (i) => DateTime.utc(now.year, now.month, now.day).subtract(Duration(days: 6 - i)));
+    // Calcula el domingo más reciente
+    final lastSunday = DateTime.utc(now.year, now.month, now.day).subtract(Duration(days: now.weekday % 7));
+    // Genera los días fijos de la semana (domingo a sábado)
+    final days = List.generate(7, (i) => lastSunday.add(Duration(days: i)));
+    // Etiquetas fijas: Domingo a Sábado
+    final labels = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
     final counts = _lastSevenDaysCounts(progress, days);
     final todayCompleted = counts.last;
     final weeklyCompleted = counts.reduce((a, b) => a + b);
@@ -65,7 +70,6 @@ class StatsPage extends ConsumerWidget {
                       sideTitles: SideTitles(
                         showTitles: true,
                         getTitlesWidget: (value, meta) {
-                          const labels = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
                           final index = value.toInt();
                           return Text(labels[index % 7]);
                         },
@@ -120,7 +124,7 @@ class StatsPage extends ConsumerWidget {
   List<int> _lastSevenDaysCounts(List<HabitProgressEntity> progress, List<DateTime> days) {
     final counts = List<int>.filled(days.length, 0);
     for (int i = 0; i < days.length; i++) {
-      counts[i] = progress.where((p) => p.date == days[i] && p.completed).length;
+      counts[i] = progress.where((p) => p.date.weekday == days[i].weekday && p.date == days[i] && p.completed).length;
     }
     return counts;
   }
@@ -184,14 +188,21 @@ class _DayDetails extends StatelessWidget {
             else if (completed.isEmpty)
               Text('No marcaste hábitos ese día.', style: Theme.of(context).textTheme.bodyMedium)
             else
-              ...completed.map(
-                (habit) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    IconData(habit.iconCodePoint, fontFamily: habit.iconFontFamily, fontPackage: habit.iconFontPackage),
-                    color: scheme.primary,
-                  ),
-                  title: Text(habit.title),
+              SizedBox(
+                height: 180,
+                child: ListView.builder(
+                  itemCount: completed.length,
+                  itemBuilder: (context, index) {
+                    final habit = completed[index];
+                    return ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: Icon(
+                        IconData(habit.iconCodePoint, fontFamily: habit.iconFontFamily, fontPackage: habit.iconFontPackage),
+                        color: scheme.primary,
+                      ),
+                      title: Text(habit.title),
+                    );
+                  },
                 ),
               ),
           ],
