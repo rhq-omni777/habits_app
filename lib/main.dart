@@ -7,7 +7,6 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/config/app_config.dart';
 import 'core/services/notifications_service.dart';
-import 'core/services/location_service.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -28,7 +27,6 @@ Future<void> main() async {
   };
   await NotificationsService.instance.init(onSelect: onSelect);
   // Request location once to align time/zone from device GPS if available.
-  await LocationService.instance.ensureLocationAccess();
   runApp(const ProviderScope(child: HabitsApp()));
 }
 
