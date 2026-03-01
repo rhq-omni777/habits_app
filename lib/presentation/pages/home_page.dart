@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:go_router/go_router.dart';
 import '../../domain/entities/habit_entity.dart';
 import '../../domain/entities/habit_progress_entity.dart';
 import '../providers/habit_providers.dart';
 import '../providers/progress_providers.dart';
 
-final expandedHabitsProvider = StateProvider<Set<String>>((_) => <String>{});
-final handledNotificationHabitsProvider = StateProvider<Set<String>>((_) => <String>{});
+final expandedHabitsProvider = StateProvider<Set<String>>((ref) => <String>{});
+final handledNotificationHabitsProvider = StateProvider<Set<String>>((ref) => <String>{});
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key, this.initialHabitId});
@@ -21,7 +22,7 @@ class HomePage extends ConsumerWidget {
     final progressList = progressState.when(
       data: (data) => data,
       loading: () => const <HabitProgressEntity>[],
-      error: (_, __) => const <HabitProgressEntity>[],
+      error: (error, stackTrace) => const <HabitProgressEntity>[],
     );
     final expandedHabits = ref.watch(expandedHabitsProvider);
     final scheme = Theme.of(context).colorScheme;
@@ -188,7 +189,7 @@ class HomePage extends ConsumerWidget {
 
   void _toggleExpand(WidgetRef ref, String habitId) {
     ref.read(expandedHabitsProvider.notifier).update((state) {
-      final next = {...state};
+      final next = <String>{...state};
       if (next.contains(habitId)) {
         next.remove(habitId);
       } else {

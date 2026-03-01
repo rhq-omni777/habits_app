@@ -68,7 +68,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
-      final auth = authState.valueOrNull;
+      final auth = authState.asData?.value;
       final loggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
 
       // Mientras resolvemos el estado de sesión mantenemos el splash para evitar el flash de login.

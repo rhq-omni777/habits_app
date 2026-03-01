@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../core/config/app_config.dart';
 import '../../core/services/notifications_service.dart';
 import '../../data/repositories/firebase_habit_repository.dart';
@@ -17,7 +18,7 @@ final habitRepositoryProvider = Provider<HabitRepository>((ref) {
 });
 
 final habitsProvider = StateNotifierProvider<HabitsNotifier, AsyncValue<List<HabitEntity>>>((ref) {
-  final auth = ref.watch(authStateProvider).valueOrNull;
+  final auth = ref.watch(authStateProvider).asData?.value;
   final repo = ref.watch(habitRepositoryProvider);
   return HabitsNotifier(
     repo: repo,

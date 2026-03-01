@@ -23,8 +23,9 @@ class SplashPage extends ConsumerWidget {
         ),
       );
     }
-    final user = authState.valueOrNull;
-    Future.microtask(() {
+    final user = authState.asData?.value;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!context.mounted) return;
       final target = user == null ? '/login' : '/home';
       context.go(target);
     });

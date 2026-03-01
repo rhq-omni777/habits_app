@@ -49,6 +49,10 @@ app.*.map.json
 /ios/Runner/GoogleService-Info.plist
 /lib/firebase_options.dart
 
+# Allow committing Firebase configuration (per user request)
+!/android/app/google-services.json
+!/lib/firebase_options.dart
+
 # Generated plugin registrant (platform-specific)
 **/GeneratedPluginRegistrant.*
 

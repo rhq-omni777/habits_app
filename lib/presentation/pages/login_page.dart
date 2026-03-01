@@ -93,14 +93,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
-    final user = authState.valueOrNull;
+    final user = authState.asData?.value;
     if (user != null) {
-      Future.microtask(() => context.go('/home'));
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!context.mounted) return;
+        context.go('/home');
+      });
       return const SizedBox.shrink();
     }
     ref.listen(authControllerProvider, (_, next) {
-      final user = next.valueOrNull;
-      if (user != null) context.go('/home');
+      final nextUser = next.asData?.value;
+      if (nextUser != null && context.mounted) context.go('/home');
     });
 
     final scheme = Theme.of(context).colorScheme;

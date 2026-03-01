@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../data/repositories/firebase_auth_repository.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/usecases/sign_in.dart';

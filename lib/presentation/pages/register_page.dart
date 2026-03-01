@@ -28,7 +28,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     ref.listen(authControllerProvider, (_, next) {
-      final user = next.valueOrNull;
+      final user = next.asData?.value;
       if (user != null) context.go('/home');
     });
 

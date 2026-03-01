@@ -14,7 +14,7 @@ Future<void> main() async {
   if (kUseFirebase) {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   }
-  final onSelect = (NotificationResponse response) async {
+  Future<void> onSelect(NotificationResponse response) async {
     final ctx = rootNavigatorKey.currentContext;
     if (ctx != null) {
       final payload = response.payload;
@@ -24,7 +24,7 @@ Future<void> main() async {
         GoRouter.of(ctx).go('/home');
       }
     }
-  };
+  }
   await NotificationsService.instance.init(onSelect: onSelect);
   // Request location once to align time/zone from device GPS if available.
   runApp(const ProviderScope(child: HabitsApp()));

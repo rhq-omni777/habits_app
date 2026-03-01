@@ -18,7 +18,7 @@ class ProfilePage extends ConsumerStatefulWidget {
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
   Future<void> _changeEmail(BuildContext context, WidgetRef ref) async {
-    final emailCtrl = TextEditingController(text: ref.read(authStateProvider).valueOrNull?.email ?? '');
+    final emailCtrl = TextEditingController(text: ref.read(authStateProvider).asData?.value?.email ?? '');
     final passCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
     final result = await showDialog<bool>(
@@ -123,7 +123,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   Future<String?> _linkEmailPassword(BuildContext context, WidgetRef ref) async {
-    final emailCtrl = TextEditingController(text: ref.read(authStateProvider).valueOrNull?.email ?? '');
+    final emailCtrl = TextEditingController(text: ref.read(authStateProvider).asData?.value?.email ?? '');
     final passCtrl = TextEditingController();
     final formKey = GlobalKey<FormState>();
     final result = await showDialog<bool>(
@@ -169,7 +169,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   Future<void> _upgradeGuestAccount(BuildContext context, WidgetRef ref) async {
-    final currentUser = ref.read(authStateProvider).valueOrNull;
+    final currentUser = ref.read(authStateProvider).asData?.value;
     final displayName = currentUser?.displayName.trim();
     final name = (displayName?.isNotEmpty ?? false) ? displayName! : 'Invitado';
     final emailCtrl = TextEditingController();
@@ -192,11 +192,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 setState(() => loadingEmail = true);
                 try {
                   await ref.read(authControllerProvider.notifier).doSignUp(emailCtrl.text.trim(), passCtrl.text, name);
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   Navigator.of(context).pop(true);
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cuenta creada y progreso guardado')));
                 } catch (e) {
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
                 } finally {
                   if (mounted) setState(() => loadingEmail = false);
@@ -207,11 +207,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 setState(() => loadingGoogle = true);
                 try {
                   await ref.read(authControllerProvider.notifier).doGoogleSignIn();
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   Navigator.of(context).pop(true);
                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cuenta creada con Google')));
                 } catch (e) {
-                  if (!mounted) return;
+                  if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
                 } finally {
                   if (mounted) setState(() => loadingGoogle = false);
@@ -297,7 +297,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       );
       if (goAdd == true && context.mounted) {
         final newPassword = await _linkEmailPassword(context, ref);
-        if (!mounted) return;
+        if (!context.mounted) return;
         if (newPassword != null) {
           await _deleteAccount(context, ref, needsPasswordLink: false, prefilledPassword: newPassword);
         }
@@ -392,7 +392,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authStateProvider).valueOrNull;
+    final user = ref.watch(authStateProvider).asData?.value;
     final achievements = ref.watch(achievementsProvider);
     final progress = ref.watch(progressProvider).value ?? [];
     final habits = ref.watch(habitsProvider).value ?? [];

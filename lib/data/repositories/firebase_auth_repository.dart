@@ -11,8 +11,8 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<T> _runAuth<T>(Future<T> Function() action) async {
     try {
       return await action();
-    } on AuthFailure catch (e) {
-      throw e;
+    } on AuthFailure {
+      rethrow;
     } on fb.FirebaseAuthException catch (e) {
       throw _mapAuthError(e);
     } on Exception catch (e) {
@@ -43,20 +43,16 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<UserEntity> signInWithGoogle() async {
     return _runAuth(() async {
       await _googleSignIn.initialize();
-      if (_googleSignIn.supportsAuthenticate()) {
-        final googleUser = await _googleSignIn.authenticate();
-        if (googleUser == null) {
-          throw const AuthFailure(code: 'cancelled', message: 'Inicio con Google cancelado');
-        }
-        final googleAuth = await googleUser.authentication;
-        final credential = fb.GoogleAuthProvider.credential(
-          idToken: googleAuth.idToken,
-        );
-        final cred = await _auth.signInWithCredential(credential);
-        return _mapUser(cred.user)!;
-      } else {
+      if (!_googleSignIn.supportsAuthenticate()) {
         throw const AuthFailure(code: 'cancelled', message: 'Google Sign-In no soportado en esta plataforma');
       }
+      final googleUser = await _googleSignIn.authenticate();
+      final googleAuth = googleUser.authentication;
+      final credential = fb.GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+      );
+      final cred = await _auth.signInWithCredential(credential);
+      return _mapUser(cred.user)!;
     });
   }
 

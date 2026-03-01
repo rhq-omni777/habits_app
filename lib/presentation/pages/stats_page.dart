@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../domain/entities/habit_progress_entity.dart';
 import '../../domain/entities/habit_entity.dart';
 import '../providers/habit_providers.dart';
@@ -15,7 +16,7 @@ class StatsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final progress = (ref.watch(progressProvider).value ?? []).map(_normalize).toList();
     final habits = ref.watch(habitsProvider).value ?? [];
-    final habitMap = {for (final h in habits) h.id: h};
+    final Map<String, HabitEntity> habitMap = {for (final HabitEntity h in habits) h.id: h};
     final selectedDayIndex = ref.watch(selectedDayIndexProvider);
     final now = DateTime.now().toUtc();
     // Calcula el domingo más reciente

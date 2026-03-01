@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../core/config/app_config.dart';
 import '../../data/repositories/firebase_achievement_repository.dart';
 import '../../data/repositories/in_memory_achievement_repository.dart';
@@ -14,7 +15,7 @@ final achievementRepositoryProvider = Provider<AchievementRepository>((ref) {
 });
 
 final achievementsProvider = StateNotifierProvider<AchievementsNotifier, AsyncValue<List<AchievementEntity>>>((ref) {
-  final auth = ref.watch(authStateProvider).valueOrNull;
+  final auth = ref.watch(authStateProvider).asData?.value;
   final repo = ref.watch(achievementRepositoryProvider);
   final progress = ref.watch(progressProvider).value ?? [];
   return AchievementsNotifier(repo: repo, userId: auth?.id, progressCount: progress.length);

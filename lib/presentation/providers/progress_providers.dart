@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import '../../core/config/app_config.dart';
 import '../../data/repositories/firebase_progress_repository.dart';
 import '../../data/repositories/in_memory_progress_repository.dart';
@@ -20,7 +21,7 @@ DateTime normalizedUtcDay(DateTime dt) {
 }
 
 final progressProvider = StateNotifierProvider<ProgressNotifier, AsyncValue<List<HabitProgressEntity>>>((ref) {
-  final auth = ref.watch(authStateProvider).valueOrNull;
+  final auth = ref.watch(authStateProvider).asData?.value;
   final repo = ref.watch(progressRepositoryProvider);
   return ProgressNotifier(
     repo: repo,
