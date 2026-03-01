@@ -20,4 +20,4 @@ jobs:
       - name: Flutter analyze
         run: flutter analyze
       - name: Flutter test
-        run: flutter test --no-sound-null-safety
+        run: flutter test
