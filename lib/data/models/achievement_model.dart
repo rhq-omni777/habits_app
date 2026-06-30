@@ -1,5 +1,8 @@
+// Modelo que representa un logro para convertirlo a y desde datos.
+
 import '../../domain/entities/achievement_entity.dart';
 
+// Modelo para guardar y leer logros desde Firestore.
 class AchievementModel extends AchievementEntity {
   const AchievementModel({
     required super.id,
@@ -17,6 +20,7 @@ class AchievementModel extends AchievementEntity {
         unlocked: map['unlocked'] as bool? ?? false,
       );
 
+  // Ejecuta la lógica relacionada con to map.
   Map<String, dynamic> toMap() => {
         'id': id,
         'title': title,

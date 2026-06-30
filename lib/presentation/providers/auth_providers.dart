@@ -1,3 +1,5 @@
+// Providers para gestionar el estado de autenticación.
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import '../../data/repositories/firebase_auth_repository.dart';
@@ -50,6 +52,7 @@ final authControllerProvider = StateNotifierProvider<AuthController, AsyncValue<
   );
 });
 
+// Controla las acciones de autenticación del usuario.
 class AuthController extends StateNotifier<AsyncValue<UserEntity?>> {
   AuthController({required this.signIn, required this.signInWithGoogle, required this.signInAnonymously, required this.signUp, required this.signOut, required this.updateEmail, required this.updatePassword, required this.linkEmailPassword, required this.deleteAccount, required this.sendPasswordReset, required this.repo})
       : super(const AsyncLoading()) {

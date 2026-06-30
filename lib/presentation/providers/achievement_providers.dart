@@ -1,3 +1,5 @@
+// Providers para exponer los logros del usuario.
+
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -54,6 +56,7 @@ class AchievementsNotifier extends StateNotifier<AsyncValue<List<AchievementEnti
     });
   }
 
+  // Ejecuta la lógica relacionada con base achievements.
   List<AchievementEntity> _baseAchievements(int progressCount) => const [
         AchievementEntity(
           id: 'first1',
@@ -150,6 +153,8 @@ class AchievementsNotifier extends StateNotifier<AsyncValue<List<AchievementEnti
           .toList();
 
   @override
+
+  // Libera los recursos cuando el widget deja de usarse.
   void dispose() {
     _sub?.cancel();
     super.dispose();

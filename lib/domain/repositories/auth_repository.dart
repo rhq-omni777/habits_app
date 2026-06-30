@@ -1,3 +1,5 @@
+// Contrato para trabajar con autenticación desde el dominio.
+
 import '../entities/user_entity.dart';
 
 abstract class AuthRepository {

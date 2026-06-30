@@ -1,3 +1,5 @@
+// Implementación de autenticación con Firebase Auth.
+
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:google_sign_in/google_sign_in.dart';
 import '../../domain/entities/user_entity.dart';
@@ -20,12 +22,15 @@ class FirebaseAuthRepository implements AuthRepository {
     }
   }
 
+  // Ejecuta la lógica relacionada con map user.
   UserEntity? _mapUser(fb.User? user) {
     if (user == null) return null;
     return UserEntity(id: user.uid, email: user.email ?? '', displayName: user.displayName ?? '');
   }
 
   @override
+
+  // Ejecuta la lógica relacionada con auth state changes.
   Stream<UserEntity?> authStateChanges() => _auth.authStateChanges().map(_mapUser);
 
   @override
@@ -196,6 +201,7 @@ class FirebaseAuthRepository implements AuthRepository {
     });
   }
 
+  // Ejecuta la lógica relacionada con map auth error.
   AuthFailure _mapAuthError(fb.FirebaseAuthException e) {
     switch (e.code) {
       case 'invalid-email':

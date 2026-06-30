@@ -1,3 +1,5 @@
+// Caso de uso para eliminar la cuenta del usuario.
+
 import '../repositories/auth_repository.dart';
 
 class DeleteAccount {

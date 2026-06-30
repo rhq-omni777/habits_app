@@ -1,3 +1,5 @@
+// Contrato para trabajar con logros desde el dominio.
+
 import '../entities/achievement_entity.dart';
 
 abstract class AchievementRepository {

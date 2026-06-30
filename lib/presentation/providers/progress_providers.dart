@@ -1,3 +1,5 @@
+// Providers para gestionar el progreso diario de los hábitos.
+
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -15,6 +17,7 @@ final progressRepositoryProvider = Provider<ProgressRepository>((ref) {
   return InMemoryProgressRepository();
 });
 
+// Ejecuta la lógica relacionada con normalized utc day.
 DateTime normalizedUtcDay(DateTime dt) {
   final utc = dt.toUtc();
   return DateTime.utc(utc.year, utc.month, utc.day);
@@ -31,6 +34,7 @@ final progressProvider = StateNotifierProvider<ProgressNotifier, AsyncValue<List
   );
 });
 
+// Gestiona el progreso diario de los hábitos.
 class ProgressNotifier extends StateNotifier<AsyncValue<List<HabitProgressEntity>>> {
   ProgressNotifier({
     required this.repo,
@@ -67,6 +71,7 @@ class ProgressNotifier extends StateNotifier<AsyncValue<List<HabitProgressEntity
     }
   }
 
+  // Ejecuta la lógica relacionada con streak for habit.
   int streakForHabit(String habitId) {
     final list = state.value ?? [];
     final dates = list.where((p) => p.habitId == habitId && p.completed).map((p) => p.date).toSet();
@@ -80,6 +85,8 @@ class ProgressNotifier extends StateNotifier<AsyncValue<List<HabitProgressEntity
   }
 
   @override
+
+  // Libera los recursos cuando el widget deja de usarse.
   void dispose() {
     _sub?.cancel();
     super.dispose();

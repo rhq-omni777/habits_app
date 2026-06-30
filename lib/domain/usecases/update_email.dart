@@ -1,3 +1,5 @@
+// Caso de uso para cambiar el correo del usuario.
+
 import '../repositories/auth_repository.dart';
 
 class UpdateEmail {

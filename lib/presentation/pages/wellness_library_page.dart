@@ -1,13 +1,18 @@
+// Pantalla con ideas y referencias de hábitos saludables.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/habit_entity.dart';
 import '../providers/habit_providers.dart';
 
+// Pantalla con ideas y recursos de hábitos saludables.
 class WellnessLibraryPage extends ConsumerWidget {
   const WellnessLibraryPage({super.key});
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context, WidgetRef ref) {
     final templates = _templates;
     final scheme = Theme.of(context).colorScheme;
@@ -34,6 +39,7 @@ class WellnessLibraryPage extends ConsumerWidget {
     );
   }
 
+  // Ejecuta la lógica relacionada con create from template.
   void _createFromTemplate(BuildContext context, WidgetRef ref, _HabitTemplate t) {
     final habit = HabitEntity(
       id: const Uuid().v4(),
@@ -60,6 +66,8 @@ class _TemplateCard extends StatelessWidget {
   final VoidCallback onAdd;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -95,6 +103,7 @@ class _TemplateCard extends StatelessWidget {
     );
   }
 
+  // Ejecuta la lógica relacionada con day short.
   String _dayShort(int day) {
     const labels = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
     return labels[(day - 1).clamp(0, 6)];
@@ -107,6 +116,8 @@ class _Pill extends StatelessWidget {
   final String label;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
@@ -127,6 +138,8 @@ class _TipBanner extends StatelessWidget {
   final String body;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -185,6 +198,7 @@ class _HabitTemplate {
   }
 }
 
+// Ejecuta la lógica relacionada con two.
 String _two(int value) => value.toString().padLeft(2, '0');
 
 const List<_HabitTemplate> _templates = [

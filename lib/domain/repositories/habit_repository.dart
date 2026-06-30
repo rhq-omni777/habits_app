@@ -1,3 +1,5 @@
+// Contrato para trabajar con hábitos desde el dominio.
+
 import '../entities/habit_entity.dart';
 
 abstract class HabitRepository {

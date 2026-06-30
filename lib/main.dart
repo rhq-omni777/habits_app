@@ -1,3 +1,5 @@
+// Punto de entrada principal de la aplicación.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -34,6 +36,8 @@ class HabitsApp extends ConsumerWidget {
   const HabitsApp({super.key});
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     return MaterialApp.router(

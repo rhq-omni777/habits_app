@@ -1,3 +1,5 @@
+// Pantalla para ver y gestionar el perfil del usuario.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,10 +11,13 @@ import '../../domain/entities/habit_progress_entity.dart';
 import '../../domain/entities/achievement_entity.dart';
 import '../../domain/errors/auth_failure.dart';
 
+// Pantalla para ver y administrar el perfil del usuario.
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
   @override
+
+  // Crea el estado asociado al widget.
   ConsumerState<ProfilePage> createState() => _ProfilePageState();
 }
 
@@ -58,6 +63,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
     if (!context.mounted) return;
     if (result != true) return;
+
+    // Ejecuta la lógica relacionada con run auth action.
     await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doUpdateEmail(emailCtrl.text.trim(), currentPassword: passCtrl.text.isEmpty ? null : passCtrl.text));
   }
 
@@ -119,6 +126,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
     if (!context.mounted) return;
     if (result != true) return;
+
+    // Ejecuta la lógica relacionada con run auth action.
     await _runAuthAction(context, ref, () => ref.read(authControllerProvider.notifier).doUpdatePassword(currentPassword: requiresCurrentPassword ? currentCtrl.text : null, newPassword: newCtrl.text));
   }
 
@@ -370,6 +379,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     }
   }
 
+  // Ejecuta la lógica relacionada con friendly auth message.
   String _friendlyAuthMessage(dynamic e) {
     if (e is AuthFailure) {
       switch (e.code) {
@@ -391,6 +401,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final user = ref.watch(authStateProvider).asData?.value;
     final achievements = ref.watch(achievementsProvider);
@@ -493,6 +505,8 @@ class _HeaderCard extends StatelessWidget {
   final _FrameStyle frame;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -563,6 +577,8 @@ class _StatsWrap extends StatelessWidget {
   final int activeHabits;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return LayoutBuilder(builder: (context, constraints) {
@@ -591,6 +607,8 @@ class _StatCard extends StatelessWidget {
   final double width;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -641,6 +659,8 @@ class _SecurityActions extends StatelessWidget {
   final VoidCallback onDeleteAccount;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Card(
@@ -713,6 +733,8 @@ class _AchievementsGrid extends StatelessWidget {
   final int progressCount;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       final isWide = constraints.maxWidth > 640;
@@ -746,6 +768,8 @@ class _AchievementCard extends StatelessWidget {
   final double width;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -794,6 +818,7 @@ class _FrameStyle {
   final String label;
 }
 
+// Ejecuta la lógica relacionada con frame from streak.
 _FrameStyle _frameFromStreak(int streak) {
   if (streak >= 30) return const _FrameStyle(colors: [Color(0xFF8E2DE2), Color(0xFF4A00E0)], icon: Icons.bolt, label: 'Épico');
   if (streak >= 14) return const _FrameStyle(colors: [Color(0xFFd4af37), Color(0xFFf3e5ab)], icon: Icons.star, label: 'Oro');
@@ -802,6 +827,7 @@ _FrameStyle _frameFromStreak(int streak) {
   return const _FrameStyle(colors: [Color(0xFF607D8B), Color(0xFF90A4AE)], icon: Icons.hourglass_bottom, label: 'Novato');
 }
 
+// Ejecuta la lógica relacionada con level from streak.
 String _levelFromStreak(int streak) {
   if (streak >= 30) return 'Nivel Épico';
   if (streak >= 14) return 'Nivel Oro';
@@ -810,6 +836,7 @@ String _levelFromStreak(int streak) {
   return 'Nivel Novato';
 }
 
+// Ejecuta la lógica relacionada con max streak.
 int _maxStreak(List<HabitProgressEntity> progress) {
   final byHabit = <String, Set<DateTime>>{};
   for (final p in progress) {
@@ -836,4 +863,5 @@ int _maxStreak(List<HabitProgressEntity> progress) {
   return max;
 }
 
+// Ejecuta la lógica relacionada con normalize.
 DateTime _normalize(DateTime d) => DateTime.utc(d.year, d.month, d.day);

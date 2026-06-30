@@ -1,3 +1,5 @@
+// Repositorio de hábitos en memoria para pruebas o respaldo.
+
 import '../../domain/entities/habit_entity.dart';
 import '../../domain/repositories/habit_repository.dart';
 import '../datasources/in_memory_store.dart';
@@ -53,6 +55,8 @@ class InMemoryHabitRepository implements HabitRepository {
   }
 
   @override
+
+  // Escucha los hábitos que vienen del repositorio.
   Stream<List<HabitEntity>> watchHabits(String userId) {
     Future.microtask(_store.emitHabits);
     return _store.habitChanges();

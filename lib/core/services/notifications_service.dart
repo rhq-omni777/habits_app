@@ -1,8 +1,11 @@
+// Servicio para programar y gestionar las notificaciones locales.
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
+// Sirve para programar y gestionar notificaciones locales.
 class NotificationsService {
   NotificationsService._();
   static final NotificationsService instance = NotificationsService._();
@@ -12,6 +15,8 @@ class NotificationsService {
   static const String _channelDescription = 'Notificaciones diarias para recordar tus hábitos';
 
   /// Deterministic notification id from habit id (stable across runs).
+
+  // Ejecuta la lógica relacionada con notification id.
   int notificationId(String habitId) {
     var hash = 0;
     for (final codeUnit in habitId.codeUnits) {

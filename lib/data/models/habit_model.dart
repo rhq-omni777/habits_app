@@ -1,9 +1,12 @@
+// Modelo que representa un hábito para trabajar con Firestore.
+
 import '../../domain/entities/habit_entity.dart';
 
 // Code point for Material Icons "check_circle_outline"
 const int _defaultHabitIcon = 0xe86c;
 const String _defaultHabitFontFamily = 'MaterialIcons';
 
+// Modelo para guardar y leer hábitos desde Firestore.
 class HabitModel extends HabitEntity {
   const HabitModel({
     required super.id,
@@ -36,6 +39,7 @@ class HabitModel extends HabitEntity {
         iconFontPackage: map['iconFontPackage'] as String?,
       );
 
+  // Ejecuta la lógica relacionada con to map.
   Map<String, dynamic> toMap() => {
         'id': id,
         'title': title,

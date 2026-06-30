@@ -1,3 +1,5 @@
+// Repositorio de logros en memoria para pruebas o respaldo.
+
 import '../../domain/entities/achievement_entity.dart';
 import '../../domain/repositories/achievement_repository.dart';
 import '../datasources/in_memory_store.dart';
@@ -25,6 +27,8 @@ class InMemoryAchievementRepository implements AchievementRepository {
   }
 
   @override
+
+  // Ejecuta la lógica relacionada con watch achievements.
   Stream<List<AchievementEntity>> watchAchievements(String userId) {
     if (_store.achievements.isEmpty) {
       _store.achievements.addAll([

@@ -1,13 +1,18 @@
+// Pantalla de acceso para iniciar sesión.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../domain/errors/auth_failure.dart';
 import '../providers/auth_providers.dart';
 
+// Pantalla para iniciar sesión en la app.
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
   @override
+
+  // Crea el estado asociado al widget.
   ConsumerState<LoginPage> createState() => _LoginPageState();
 }
 
@@ -17,6 +22,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final _password = TextEditingController();
   bool _sendingReset = false;
 
+  // Ejecuta la lógica relacionada con submit.
   void _submit() {
     if (_formKey.currentState?.validate() ?? false) {
       ref.read(authControllerProvider.notifier).doSignIn(_email.text.trim(), _password.text.trim());
@@ -65,6 +71,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     }
   }
 
+  // Ejecuta la lógica relacionada con friendly auth message.
   String _friendlyAuthMessage(dynamic e) {
     if (e is AuthFailure) {
       switch (e.code) {
@@ -84,6 +91,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   @override
+
+  // Libera los recursos cuando el widget deja de usarse.
   void dispose() {
     _email.dispose();
     _password.dispose();
@@ -91,6 +100,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     final user = authState.asData?.value;

@@ -1,3 +1,5 @@
+// Implementación de hábitos usando Firestore.
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/habit_entity.dart';
 import '../../domain/repositories/habit_repository.dart';
@@ -6,6 +8,7 @@ import '../models/habit_model.dart';
 class FirebaseHabitRepository implements HabitRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  // Ejecuta la lógica relacionada con collection.
   CollectionReference<Map<String, dynamic>> _collection(String userId) =>
       _db.collection('users').doc(userId).collection('habits');
 
@@ -51,6 +54,8 @@ class FirebaseHabitRepository implements HabitRepository {
   }
 
   @override
+
+  // Escucha los hábitos que vienen del repositorio.
   Stream<List<HabitEntity>> watchHabits(String userId) {
     return _collection(userId).orderBy('createdAt').snapshots().map(
           (snapshot) => snapshot.docs

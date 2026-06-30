@@ -1,5 +1,8 @@
+// Tema visual principal de la aplicación.
+
 import 'package:flutter/material.dart';
 
+// Define el tema visual de la app.
 class AppTheme {
   static ColorScheme get _lightScheme => ColorScheme.fromSeed(
         brightness: Brightness.light,
@@ -26,6 +29,7 @@ class AppTheme {
   static ThemeData get light => _base(_lightScheme);
   static ThemeData get dark => _base(_darkScheme);
 
+  // Ejecuta la lógica relacionada con base.
   static ThemeData _base(ColorScheme scheme) {
     final base = ThemeData(colorScheme: scheme, useMaterial3: true);
     final text = base.textTheme;

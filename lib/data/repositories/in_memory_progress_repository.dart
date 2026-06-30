@@ -1,3 +1,5 @@
+// Repositorio de progreso en memoria para pruebas o respaldo.
+
 import '../../domain/entities/habit_progress_entity.dart';
 import '../../domain/repositories/progress_repository.dart';
 import '../datasources/in_memory_store.dart';
@@ -22,6 +24,8 @@ class InMemoryProgressRepository implements ProgressRepository {
   }
 
   @override
+
+  // Ejecuta la lógica relacionada con watch progress.
   Stream<List<HabitProgressEntity>> watchProgress(String userId) {
     Future.microtask(_store.emitProgress);
     return _store.progressChanges();

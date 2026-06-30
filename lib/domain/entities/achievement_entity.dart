@@ -1,3 +1,6 @@
+// Entidad de dominio que representa un logro del usuario.
+
+// Representa un logro del usuario.
 class AchievementEntity {
   final String id;
   final String title;

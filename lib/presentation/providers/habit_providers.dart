@@ -1,3 +1,5 @@
+// Providers para gestionar el estado de los hábitos.
+
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -29,6 +31,7 @@ final habitsProvider = StateNotifierProvider<HabitsNotifier, AsyncValue<List<Hab
   );
 });
 
+// Gestiona los hábitos y sus cambios en estado.
 class HabitsNotifier extends StateNotifier<AsyncValue<List<HabitEntity>>> {
   HabitsNotifier({
     required this.repo,
@@ -59,6 +62,7 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<HabitEntity>>> {
     });
   }
 
+  // Ejecuta la lógica relacionada con restore notifications.
   void _restoreNotifications(List<HabitEntity> habits) {
     if (_restoredNotifications) return;
     _restoredNotifications = true;
@@ -117,6 +121,8 @@ class HabitsNotifier extends StateNotifier<AsyncValue<List<HabitEntity>>> {
   }
 
   @override
+
+  // Libera los recursos cuando el widget deja de usarse.
   void dispose() {
     _sub?.cancel();
     super.dispose();

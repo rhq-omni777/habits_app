@@ -1,12 +1,17 @@
+// Pantalla inicial que se muestra mientras carga la app.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_providers.dart';
 
+// Pantalla inicial que se muestra mientras carga la app.
 class SplashPage extends ConsumerWidget {
   const SplashPage({super.key});
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateProvider);
     if (authState.isLoading) {

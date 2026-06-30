@@ -7,6 +7,7 @@ import '../models/habit_model.dart';
 import '../models/habit_progress_model.dart';
 import '../models/user_model.dart';
 
+// Almacena datos temporales en memoria para pruebas o respaldo.
 class InMemoryStore {
   InMemoryStore._();
   static final InMemoryStore instance = InMemoryStore._();
@@ -23,17 +24,33 @@ class InMemoryStore {
   final List<AchievementModel> achievements = [];
   final _achievementController = StreamController<List<AchievementModel>>.broadcast();
 
+  // Ejecuta la lógica relacionada con auth changes.
   Stream<UserModel?> authChanges() => _authController.stream;
+
+  // Ejecuta la lógica relacionada con habit changes.
   Stream<List<HabitModel>> habitChanges() => _habitController.stream;
+
+  // Ejecuta la lógica relacionada con progress changes.
   Stream<List<HabitProgressModel>> progressChanges() => _progressController.stream;
+
+  // Ejecuta la lógica relacionada con achievement changes.
   Stream<List<AchievementModel>> achievementChanges() => _achievementController.stream;
 
+  // Ejecuta la lógica relacionada con emit auth.
   void emitAuth(UserModel? user) => _authController.add(user);
+
+  // Ejecuta la lógica relacionada con emit habits.
   void emitHabits() => _habitController.add(List.unmodifiable(habits));
+
+  // Ejecuta la lógica relacionada con emit progress.
   void emitProgress() => _progressController.add(List.unmodifiable(progress));
+
+  // Ejecuta la lógica relacionada con emit achievements.
   void emitAchievements() => _achievementController.add(List.unmodifiable(achievements));
 
   /// Limpia el estado interno del store y emite colecciones vacías.
+
+  // Ejecuta la lógica relacionada con clear.
   void clear() {
     currentUser = null;
     habits.clear();
@@ -54,6 +71,7 @@ class InMemoryStore {
     } catch (_) {}
   }
 
+  // Libera los recursos cuando el widget deja de usarse.
   void dispose() {
     _authController.close();
     _habitController.close();

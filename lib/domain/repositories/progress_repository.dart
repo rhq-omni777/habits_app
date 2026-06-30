@@ -1,3 +1,5 @@
+// Contrato para trabajar con el progreso de hábitos desde el dominio.
+
 import '../entities/habit_progress_entity.dart';
 
 abstract class ProgressRepository {

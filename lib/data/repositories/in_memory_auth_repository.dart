@@ -1,3 +1,5 @@
+// Repositorio de autenticación en memoria para pruebas o respaldo.
+
 import 'dart:async';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -8,6 +10,8 @@ class InMemoryAuthRepository implements AuthRepository {
   final InMemoryStore _store = InMemoryStore.instance;
 
   @override
+
+  // Ejecuta la lógica relacionada con auth state changes.
   Stream<UserEntity?> authStateChanges() => _store.authChanges();
 
   @override

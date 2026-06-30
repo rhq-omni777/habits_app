@@ -1,3 +1,5 @@
+// Pantalla principal donde se muestran los hábitos y el progreso.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -10,12 +12,15 @@ import '../providers/progress_providers.dart';
 final expandedHabitsProvider = StateProvider<Set<String>>((ref) => <String>{});
 final handledNotificationHabitsProvider = StateProvider<Set<String>>((ref) => <String>{});
 
+// Pantalla principal donde se muestran los hábitos y el progreso.
 class HomePage extends ConsumerWidget {
   const HomePage({super.key, this.initialHabitId});
 
   final String? initialHabitId;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context, WidgetRef ref) {
     final habitsState = ref.watch(habitsProvider);
     final progressState = ref.watch(progressProvider);
@@ -170,23 +175,27 @@ class HomePage extends ConsumerWidget {
     );
   }
 
+  // Ejecuta la lógica relacionada con completed today.
   bool _completedToday(String habitId, List<HabitProgressEntity> progress) {
     final normalized = normalizedUtcDay(DateTime.now());
     return progress.any((p) => p.habitId == habitId && p.date == normalized && p.completed);
   }
 
+  // Ejecuta la lógica relacionada con format time.
   String _formatTime(int minutes) {
     final hours = minutes ~/ 60;
     final mins = minutes % 60;
     return '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}' ;
   }
 
+  // Ejecuta la lógica relacionada con icon for habit.
   IconData _iconForHabit(HabitEntity habit) => IconData(
         habit.iconCodePoint,
         fontFamily: habit.iconFontFamily,
         fontPackage: habit.iconFontPackage,
       );
 
+  // Ejecuta la lógica relacionada con toggle expand.
   void _toggleExpand(WidgetRef ref, String habitId) {
     ref.read(expandedHabitsProvider.notifier).update((state) {
       final next = <String>{...state};
@@ -259,6 +268,8 @@ class _StatChip extends StatelessWidget {
   final Color color;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Expanded(
@@ -330,6 +341,8 @@ class _HabitCard extends StatelessWidget {
   final VoidCallback onDelete;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -454,6 +467,8 @@ class _Pill extends StatelessWidget {
   final IconData icon;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
@@ -479,6 +494,8 @@ class _EmptyState extends StatelessWidget {
   final VoidCallback onCreate;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
@@ -529,6 +546,8 @@ class _EmptyState extends StatelessWidget {
 
 class _GuidanceBanner extends StatelessWidget {
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;

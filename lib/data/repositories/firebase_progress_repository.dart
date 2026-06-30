@@ -1,3 +1,5 @@
+// Implementación de progreso usando Firestore.
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/habit_progress_entity.dart';
 import '../../domain/repositories/progress_repository.dart';
@@ -6,6 +8,7 @@ import '../models/habit_progress_model.dart';
 class FirebaseProgressRepository implements ProgressRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  // Ejecuta la lógica relacionada con collection.
   CollectionReference<Map<String, dynamic>> _collection(String userId) =>
       _db.collection('users').doc(userId).collection('progress');
 
@@ -25,6 +28,8 @@ class FirebaseProgressRepository implements ProgressRepository {
   }
 
   @override
+
+  // Ejecuta la lógica relacionada con watch progress.
   Stream<List<HabitProgressEntity>> watchProgress(String userId) {
     return _collection(userId).snapshots().map(
           (snap) => snap.docs

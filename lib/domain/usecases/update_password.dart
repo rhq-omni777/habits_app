@@ -1,3 +1,5 @@
+// Caso de uso para cambiar la contraseña del usuario.
+
 import '../repositories/auth_repository.dart';
 
 class UpdatePassword {

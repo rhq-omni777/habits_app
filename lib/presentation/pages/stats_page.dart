@@ -1,3 +1,5 @@
+// Pantalla con estadísticas y gráficas de progreso.
+
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,10 +11,13 @@ import '../providers/progress_providers.dart';
 
 final selectedDayIndexProvider = StateProvider<int?>((_) => null);
 
+// Pantalla con estadísticas y gráficas de progreso.
 class StatsPage extends ConsumerWidget {
   const StatsPage({super.key});
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context, WidgetRef ref) {
     final progress = (ref.watch(progressProvider).value ?? []).map(_normalize).toList();
     final habits = ref.watch(habitsProvider).value ?? [];
@@ -122,6 +127,7 @@ class StatsPage extends ConsumerWidget {
     );
   }
 
+  // Ejecuta la lógica relacionada con last seven days counts.
   List<int> _lastSevenDaysCounts(List<HabitProgressEntity> progress, List<DateTime> days) {
     final counts = List<int>.filled(days.length, 0);
     for (int i = 0; i < days.length; i++) {
@@ -130,6 +136,7 @@ class StatsPage extends ConsumerWidget {
     return counts;
   }
 
+  // Ejecuta la lógica relacionada con normalize.
   HabitProgressEntity _normalize(HabitProgressEntity p) => HabitProgressEntity(
         habitId: p.habitId,
         date: DateTime.utc(p.date.year, p.date.month, p.date.day),
@@ -152,6 +159,8 @@ class _DayDetails extends StatelessWidget {
   final Map<String, HabitEntity> habitMap;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final day = selectedIndex != null && selectedIndex! < days.length ? days[selectedIndex!] : null;
@@ -220,6 +229,8 @@ class _SummaryChip extends StatelessWidget {
   final String value;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
@@ -249,6 +260,8 @@ class _StatTile extends StatelessWidget {
   final double progress;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(

@@ -1,3 +1,5 @@
+// Definición de las rutas y la navegación de la aplicación.
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -92,6 +94,8 @@ class _StreamListenable extends ChangeNotifier {
   late final StreamSubscription _sub;
 
   @override
+
+  // Libera los recursos cuando el widget deja de usarse.
   void dispose() {
     _sub.cancel();
     super.dispose();

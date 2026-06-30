@@ -1,9 +1,14 @@
+// Pantalla con la información legal de la aplicación.
+
 import 'package:flutter/material.dart';
 
+// Pantalla con información legal y términos.
 class LegalPage extends StatelessWidget {
   const LegalPage({super.key});
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
@@ -54,6 +59,8 @@ class _Bullet extends StatelessWidget {
   final String text;
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),

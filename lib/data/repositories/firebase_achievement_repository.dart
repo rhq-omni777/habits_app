@@ -1,3 +1,5 @@
+// Implementación de logros usando Firebase.
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/achievement_entity.dart';
 import '../../domain/repositories/achievement_repository.dart';
@@ -6,6 +8,7 @@ import '../models/achievement_model.dart';
 class FirebaseAchievementRepository implements AchievementRepository {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  // Ejecuta la lógica relacionada con collection.
   CollectionReference<Map<String, dynamic>> _collection(String userId) =>
       _db.collection('users').doc(userId).collection('achievements');
 
@@ -22,6 +25,8 @@ class FirebaseAchievementRepository implements AchievementRepository {
   }
 
   @override
+
+  // Ejecuta la lógica relacionada con watch achievements.
   Stream<List<AchievementEntity>> watchAchievements(String userId) {
     return _collection(userId).snapshots().map(
           (snap) => snap.docs

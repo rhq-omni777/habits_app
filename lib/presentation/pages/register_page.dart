@@ -1,12 +1,17 @@
+// Pantalla para crear una cuenta nueva.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_providers.dart';
 
+// Pantalla para crear una cuenta nueva.
 class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
 
   @override
+
+  // Crea el estado asociado al widget.
   ConsumerState<RegisterPage> createState() => _RegisterPageState();
 }
 
@@ -17,6 +22,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   final _password = TextEditingController();
 
   @override
+
+  // Libera los recursos cuando el widget deja de usarse.
   void dispose() {
     _name.dispose();
     _email.dispose();
@@ -25,6 +32,8 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
   }
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     ref.listen(authControllerProvider, (_, next) {
@@ -134,6 +143,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
     );
   }
 
+  // Ejecuta la lógica relacionada con submit.
   void _submit(AsyncValue authState) {
     if (_formKey.currentState?.validate() ?? false) {
       ref.read(authControllerProvider.notifier).doSignUp(

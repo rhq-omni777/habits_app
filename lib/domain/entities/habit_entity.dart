@@ -1,5 +1,8 @@
+// Entidad de dominio que representa un hábito.
+
 enum HabitFrequency { daily, weekly }
 
+// Representa un hábito del dominio.
 class HabitEntity {
   final String id;
   final String title;

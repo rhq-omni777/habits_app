@@ -1,3 +1,5 @@
+// Pantalla para crear o editar un hábito.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -5,12 +7,15 @@ import 'package:uuid/uuid.dart';
 import '../../domain/entities/habit_entity.dart';
 import '../providers/habit_providers.dart';
 
+// Pantalla para crear o editar un hábito.
 class HabitFormPage extends ConsumerStatefulWidget {
   const HabitFormPage({super.key, this.habit});
 
   final HabitEntity? habit;
 
   @override
+
+  // Crea el estado asociado al widget.
   ConsumerState<HabitFormPage> createState() => _HabitFormPageState();
 }
 
@@ -25,6 +30,8 @@ class _HabitFormPageState extends ConsumerState<HabitFormPage> {
   IconData _icon = Icons.flag_rounded;
 
   @override
+
+  // Inicializa el estado del widget cuando se crea.
   void initState() {
     super.initState();
     final existing = widget.habit;
@@ -42,6 +49,8 @@ class _HabitFormPageState extends ConsumerState<HabitFormPage> {
   }
 
   @override
+
+  // Libera los recursos cuando el widget deja de usarse.
   void dispose() {
     _title.dispose();
     _description.dispose();
@@ -49,6 +58,8 @@ class _HabitFormPageState extends ConsumerState<HabitFormPage> {
   }
 
   @override
+
+  // Construye la interfaz de la vista.
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.habit == null ? 'Nuevo hábito' : 'Editar hábito')),
@@ -185,6 +196,7 @@ class _HabitFormPageState extends ConsumerState<HabitFormPage> {
     );
   }
 
+  // Ejecuta la lógica relacionada con day label.
   String _dayLabel(int day) {
     const labels = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
     return labels[day - 1];
